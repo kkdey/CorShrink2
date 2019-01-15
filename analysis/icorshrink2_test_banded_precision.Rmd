@@ -1,0 +1,160 @@
+---
+title: "Simulation experiments for iCorShrink2 - Banded precision matrix"
+author: "Kushal K Dey, Rahul Mazumdar"
+date: "1/15/2019"
+output: html_document
+---
+
+```{r}
+library(MASS) 
+library(Matrix)
+library(corrplot)
+library(CorShrink)
+library(corpcor)
+library(scales)
+library(gridExtra)
+library(ggplot2)
+library(CVXR)
+```
+
+## Simulation - Banded Precision Matrix 
+
+```{r}
+band.mat <- function(a, p, K=1, permu=c(1:p)){
+  ones = rep(1,p)
+  Omega0 = a*ones%*%t(ones)
+  diag(Omega0) = rep(1,p)
+  Omega = 1*band(Omega0,-K,K)
+  Sigma = qr.solve(Omega)
+  Sigma = Sigma*(abs(Sigma)>1e-4)
+  Sigma.half=chol(Sigma)
+  Sigma.half = Sigma.half*(abs(Sigma.half)>1e-4)
+  Sigma = Sigma[permu,permu]
+  Omega = Omega[permu,permu]
+  Sigma.half = Sigma.half[permu,permu]
+  obj = list(Sigma=Sigma, Omega = Omega, Sigma.half = Sigma.half)
+}
+
+make.data <- function(Sigma.half, n, p, seed){
+  set.seed(seed)  
+  
+  X = matrix(rnorm(n*p),n,p)%*%Sigma.half
+  return(X)
+}
+```
+
+Population correlation matrix 
+
+```{r}
+n = 500
+p = 50
+obj = band.mat(a=0.5, p, K = 1)
+Sig.half = obj$Sigma.half
+Ome.true = obj$Omega
+X.mat = make.data(Sig.half, n, p, seed = 1000)
+
+
+corSigma <- cov2cor(obj$Sigma)
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(corSigma), diag = FALSE, col = colorRampPalette(col2)(200), tl.pos = "td", 
+         tl.col = "black", tl.cex = 0.8, rect.col = "white", 
+         na.label.col = "white", method = "color", type = "upper")
+```
+
+Population partial correlation matrix.
+
+```{r}
+pcorSigma <- -as.matrix(cov2cor(obj$Omega))
+diag(pcorSigma) <- rep(1, dim(pcorSigma)[1])
+col2 <- c("blue", "white", "red")
+corrplot(pcorSigma, diag = FALSE, col = colorRampPalette(col2)(200), tl.pos = "td", 
+         tl.col = "black", tl.cex = 0.8, rect.col = "white", 
+         na.label.col = "white", method = "color", type = "upper")
+
+```
+
+## Data generation with 50% missing data
+
+```{r}
+data_with_missing = apply(X.mat, c(1, 2), function(x) {
+        if(runif(1,0,1) < 0.5){
+          y = NA
+        }else{
+          y = x
+        }
+        return(y)
+})
+```
+
+Pairwise sample correlation estimate
+
+```{r}
+cor2 = cor(data_with_missing, use = "pairwise.complete.obs")
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(cor2), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+```
+
+ ## iCorSrhink estimate
+
+### Expo = 1
+
+```{r}
+alphas <- c(0.0001, 0.001, 0.01, 0.1, 1, 10)
+Partial.est <- lapply(alphas,
+                function(alpha) {
+                  out = iCorShrink2Data(data_with_missing, alpha = alpha)
+                })
+frob_dist = c()
+for (m in 1:6){
+  frob_dist[m] = mean((Partial.est[[m]] - pcorSigma)^2)
+}
+```
+
+```{r}
+par(mfrow=c(3,2))
+for(m in 1:6){
+  corrplot(as.matrix(cov2cor(Partial.est[[m]])), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+}
+```
+
+```{r}
+frob_dist
+```
+
+
+### alpha = 0.1 different exponents
+
+```{r}
+expos = c(1e-05, 0.001, 0.05, 1, 2, 10)
+alpha = 0.1
+Partial.est <- lapply(expos,
+                function(expo) {
+                  out = iCorShrink2Data(data_with_missing, alpha = alpha, expo = expo)
+                })
+frob_dist = c()
+for (m in 1:6){
+  frob_dist[m] = mean((Partial.est[[m]] - pcorSigma)^2)
+}
+min(frob_dist[!is.na(frob_dist)])
+par(mfrow=c(3,2))
+for(m in 1:6){
+  corrplot(as.matrix(cov2cor(Partial.est[[m]])), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+}
+```
+
+```{r}
+frob_dist
+```
+

@@ -1,0 +1,156 @@
+---
+title: "Simulation experiments for iCorShrink2 - Toeplitz"
+author: "Kushal K Dey, Rahul Mazumdar"
+date: "1/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS) 
+library(Matrix)
+library(corrplot)
+library(CorShrink)
+library(corpcor)
+library(scales)
+library(gridExtra)
+library(ggplot2)
+library(CVXR)
+```
+
+## Simulation - Toeplitz matrix
+
+```{r}
+DM_toeplitz = function(n,P){
+  library("MASS")
+  index1=sort(sample(seq(1:n),(n/2)))
+  index2=seq(1:n)[-index1]
+  Sigmatp=function(P){
+    a=array(0,dim=c(P,P))
+    for(i in 1:P){
+      for(j in 1:P){
+        a[i,j]=max(1-0.1*(abs(i-j)),0)
+      }
+    }
+    return(a)
+  }
+  Sigma = Sigmatp(P)
+  data = mvrnorm(n,rep(0,P),Sigma)
+  Xtest = data[index2,]
+  Xtrain = data[index1,]
+  Omega = solve(Sigma)
+  return(list(Xtrain = Xtrain, Xtest = Xtest, Sigma = Sigma))
+}
+ll <- DM_toeplitz(n=500, P=50)
+Sigma <- ll$Sigma
+corSigma <- cov2cor(Sigma)
+pcorSigma <- as.matrix(cor2pcor(corSigma))
+col2 <- c("blue", "white", "red")
+```
+
+Population correlation matrix
+
+```{r}
+corrplot(corSigma, diag = FALSE, col = colorRampPalette(col2)(200), tl.pos = "td", 
+         tl.col = "black", tl.cex = 0.8, rect.col = "white", 
+         na.label.col = "white", method = "color", type = "upper")
+```
+
+Population partial correlation matrix
+
+```{r}
+corrplot(pcorSigma, diag = FALSE, col = colorRampPalette(col2)(200), tl.pos = "td", 
+         tl.col = "black", tl.cex = 0.8, rect.col = "white", 
+         na.label.col = "white", method = "color", type = "upper")
+```
+
+##  Generating data and adding  50 % missing entries
+
+```{r}
+P=50
+data = mvrnorm(n=500, rep(0, P), Sigma)
+data_with_missing = apply(data, c(1, 2), function(x) {
+        if(runif(1,0,1) < 0.5){
+          y = NA
+        }else{
+          y = x
+        }
+        return(y)
+})
+```
+
+Pairwise sample correlation matrix.
+
+```{r}
+cor2 = cor(data_with_missing, use = "pairwise.complete.obs")
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(cor2), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+```
+
+## iCorSrhink estimate
+
+### Expo = 1
+
+```{r}
+alphas <- c(0.0001, 0.001, 0.01, 0.1, 1, 10)
+Partial.est <- lapply(alphas,
+                function(alpha) {
+                  out = iCorShrink2Data(data_with_missing, alpha = alpha)
+                })
+frob_dist = c()
+for (m in 1:6){
+  frob_dist[m] = mean((Partial.est[[m]] - pcorSigma)^2)
+}
+```
+
+```{r}
+par(mfrow=c(3,2))
+for(m in 1:6){
+  corrplot(as.matrix(cov2cor(Partial.est[[m]])), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+}
+```
+
+```{r}
+frob_dist
+```
+
+
+### alpha = 0.1 different exponents
+
+```{r}
+expos = c(1e-05, 0.001, 0.05, 1, 2, 10)
+alpha = 0.1
+Partial.est <- lapply(expos,
+                function(expo) {
+                  out = iCorShrink2Data(data_with_missing, alpha = alpha, expo = expo)
+                })
+frob_dist = c()
+for (m in 1:6){
+  frob_dist[m] = mean((Partial.est[[m]] - pcorSigma)^2)
+}
+min(frob_dist[!is.na(frob_dist)])
+par(mfrow=c(3,2))
+for(m in 1:6){
+  corrplot(as.matrix(cov2cor(Partial.est[[m]])), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+}
+```
+
+```{r}
+frob_dist
+```
+

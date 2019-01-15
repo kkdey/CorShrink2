@@ -1,0 +1,176 @@
+---
+title: "CorShrink on simulated low rank + noise data"
+author: "Kushal K Dey, Rahul Mazumdar"
+date: "12/16/2018"
+output: html_document
+---
+
+```{r}
+library(corrplot)
+library(Matrix)
+library(corpcor)
+```
+
+```{r}
+N = 1000
+M = 100
+R = 10
+sigma = 100
+
+Loading = matrix(rnorm(N*R, 0, 1), nrow=N)
+Factor = matrix(rnorm(R*M, 0, 1), nrow=R)
+Z = Loading %*% Factor
+X = Z + matrix(rnorm(N*M, 0, sigma), nrow = N)
+```
+
+```{r}
+N_test = 300
+Loading_test = matrix(rnorm(N_test*R, 0, 1), nrow=N_test)
+Z_test = Loading_test %*% Factor
+X_test = Z_test + matrix(rnorm(N_test*M, 0, sigma), nrow = N_test)
+```
+
+
+```{r}
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(cor(X)), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+```
+
+
+
+```{r}
+pairwise_cov = cov(X, use = "pairwise.complete.obs")
+common_samples = matrix(N, dim(X)[2], dim(X)[2])
+sigma_vals = sqrt(diag(pairwise_cov))
+pairwise_cor = cov2cor(pairwise_cov)
+pairwise_cor[is.na(pairwise_cor)] = 0
+pairwise_cor[pairwise_cor > 0.95] = 0.95
+pairwise_cor[pairwise_cor < -0.95] = -0.95
+diag(pairwise_cor) = 1
+common_samples[common_samples <= 2] = 2
+pairwise_cov = diag(sigma_vals) %*% pairwise_cor %*% diag(sigma_vals)
+```
+
+## Upper Bound
+
+```{r}
+pairwise_zscores = apply(pairwise_cor, c(1,2), function(x) return (0.5*log((1+x)/(1-x))))
+diag(pairwise_zscores) = 0
+
+bound1 = 12*exp(2*pairwise_zscores)/((exp(2*pairwise_zscores) + 1)^2)
+zscores_sd_1 = sqrt(1/(common_samples - 1) + 2/(common_samples - 1)^2)
+overall_bound_1 = bound1*zscores_sd_1 + zscores_sd_1^2*2*sqrt(3)
+
+common_samples_2 = matrix(N, dim(common_samples)[1], dim(common_samples)[2])
+zscores_sd_2 = sqrt(1/(common_samples_2 - 1) + 2/(common_samples_2 - 1)^2)
+overall_bound_2 = bound1*zscores_sd_2 + zscores_sd_2^2*2*sqrt(3)
+  
+B_cor = apply(abs(overall_bound_1) + abs(overall_bound_2), c(1,2), function(x) return(pmin(2,x)))
+diag(B_cor) = 0
+B_cov = diag(sigma_vals) %*% B_cor %*% diag(sigma_vals)
+```
+
+## Eigendecomposition of S + |B|
+
+```{r}
+#out= eigen(Matrix::nearPD(pairwise_cov + abs(B_cov))$mat)
+#out= eigen(pairwise_cov + abs(B_cov))
+out= eigen(pairwise_cov)
+Vhat = out$vectors
+Lvalues = out$values
+```
+
+## Constant variance 
+
+```{r}
+lambda = 1
+sigma = 0
+d2j_values = rep(0, length(Lvalues))
+
+for(num in 1:30){
+  d2j_values_new = pmax(0, Lvalues - lambda - sigma^2)
+  sigma_new = sqrt(mean(pmax(1e-04, diag(pairwise_cov) - d2j_values_new)))
+  error1 = max(abs(d2j_values_new - d2j_values))
+  error2 = abs(sigma_new - sigma)
+  cat("Reconstruction Error in eigenvalues: ", error1, "Reconstruction error in sigma:", error2, "\n")
+  sigma = sigma_new
+  d2j_values = d2j_values_new
+}
+
+```
+
+```{r}
+est_cov = Vhat %*% diag(d2j_values) %*% t(Vhat) + sigma^2*diag(1, dim(pairwise_cov)[1])
+```
+
+```{r}
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(cov2cor(est_cov)), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+```
+
+
+```{r}
+mean((cor(X_test) - cov2cor(est_cov))^2)
+```
+
+```{r}
+sigma
+```
+
+```{r}
+round(svd(Z)$d, 1)
+```
+
+```{r}
+sqrt(d2j_values)
+```
+
+## Same fit, fitted approximation
+
+```{r}
+est_cov = Vhat %*% diag(d2j_values) %*% t(Vhat) 
+```
+
+```{r}
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(cov2cor(est_cov)), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+```
+
+```{r}
+mean((cor(X_test) - cov2cor(est_cov))^2)
+```
+
+
+## sigma = 0
+
+```{r}
+lambda = 1e-05
+sigma = 0
+d2j_values = pmax(0, Lvalues - lambda - sigma^2)
+est_cov = Vhat %*% diag(d2j_values) %*% t(Vhat)
+```
+
+```{r}
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(cov2cor(est_cov)), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+```
+
+```{r}
+mean((cor(X_test) - cov2cor(est_cov))^2)
+```

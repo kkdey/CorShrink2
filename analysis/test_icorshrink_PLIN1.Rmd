@@ -1,0 +1,65 @@
+---
+title: "Testing iCorShrink on PLIN1 data"
+author: "Kushal K Dey, Rahul Mazumdar"
+date: "12/12/2018"
+output: html_document
+---
+
+```{r warning=FALSE, message=FALSE}
+library(CVXR)
+library(CorShrink)
+library(corpcor)
+library(corrplot)
+```
+
+## Data
+
+Load the individuals by tissues log CPM expression data for the PLIN1 gene.
+
+```{r}
+data("sample_by_feature_data")
+data("common_samples")
+```
+
+```{r}
+alphas <- c(0.0001, 0.001, 0.01, 0.1, 1, 10)
+Partial.est <- lapply(alphas,
+                function(alpha) {
+                  out = iCorShrinkData(sample_by_feature_data, alpha = alpha, lambda = 1)
+                })
+```
+
+```{r}
+col2 <- c("blue", "white", "red")
+par(mfrow=c(3,2))
+for(m in 1:6){
+  corrplot(as.matrix(cov2cor(Partial.est[[m]])), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+}
+```
+
+```{r}
+lambdas <- c(0.3, 0.5, 0.7, 1, 5, 10)
+Partial.est <- lapply(lambdas,
+                function(lambda) {
+                  out = iCorShrinkData(sample_by_feature_data, alpha = 0.01, lambda = lambda)
+                })
+```
+
+```{r}
+col2 <- c("blue", "white", "red")
+par(mfrow=c(3,2))
+for(m in 1:4){
+  corrplot(as.matrix(cov2cor(Partial.est[[m]])), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+}
+```
+
+
+
