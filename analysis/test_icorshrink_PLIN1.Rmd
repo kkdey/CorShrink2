@@ -61,5 +61,49 @@ for(m in 1:4){
 }
 ```
 
+## icorshrink2  - different alpha, power = 1
 
+```{r}
+alphas <- c(0.0001, 0.001, 0.01, 0.1, 1, 10)
+Partial.est <- lapply(alphas,
+                function(alpha) {
+                  out = iCorShrink2Data(sample_by_feature_data, alpha = alpha, expo = 0.05)
+                })
+```
+
+
+```{r}
+col2 <- c("blue", "white", "red")
+par(mfrow=c(3,2))
+for(m in 1:4){
+  corrplot(as.matrix(cov2cor(Partial.est[[m]])), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+}
+```
+
+### alpha = 0.1 different exponents
+
+```{r}
+expos = c(1e-05, 0.05, 1,  10)
+alpha = 0.1
+Partial.est <- lapply(expos,
+                function(expo) {
+                  out = iCorShrink2Data(sample_by_feature_data, alpha = alpha, expo = expo)
+                })
+```
+
+```{r}
+col2 <- c("blue", "white", "red")
+par(mfrow=c(2,2))
+for(m in 1:4){
+  corrplot(as.matrix(cov2cor(Partial.est[[m]])), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+}
+```
 

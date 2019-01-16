@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Kushal K Dey, Rahul Mazumdar" />
+
+
+<title>Predictive Accuracy of CorShrink-sparse and CorShrink-Loss approaches on PLIN1 gene expression</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">CorShrink2</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Predictive Accuracy of CorShrink-sparse and CorShrink-Loss approaches on PLIN1 gene expression</h1>
+<h4 class="author"><em>Kushal K Dey, Rahul Mazumdar</em></h4>
+<h4 class="date"><em>1/16/2019</em></h4>
+
+</div>
+
+
+<p><strong>Last updated:</strong> 2019-01-16</p>
+<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
+<ul>
+<li>
+<p><details> <summary> <strong style="color:red;">✖</strong> <strong>R Markdown file:</strong> uncommitted changes </summary> The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Environment:</strong> empty </summary></p>
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Seed:</strong> <code>set.seed(20190114)</code> </summary></p>
+<p>The command <code>set.seed(20190114)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Session information:</strong> recorded </summary></p>
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/kkdey/CorShrink2/tree/31c2ff002c024ed870b32696bc63798c9c6195ba" target="_blank">31c2ff0</a> </summary></p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  analysis/missingness_on_variance.Rmd
+    Untracked:  analysis/predictive_corshrink_sparse.Rmd
+    Untracked:  analysis/predictive_corshrink_sparse_slack.Rmd
+    Untracked:  data/person_tissue_genes_voom.rda
+    Untracked:  docs/figure/predictive_corshrink_sparse.Rmd/
+    Untracked:  docs/figure/predictive_corshrink_sparse_slack.Rmd/
+    Untracked:  output/PLIN1_predictive_perform_corshrink_sparse_loss.rda
+    Untracked:  output/PLIN1_predictive_perform_corshrink_sparse_slack.rda
+
+Unstaged changes:
+    Modified:   analysis/test_icorshrink_PLIN1.Rmd
+
+</code></pre>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes. </details>
+</li>
+</ul>
+<hr />
+<pre class="r"><code>library(corrplot)</code></pre>
+<pre><code>corrplot 0.84 loaded</code></pre>
+<pre class="r"><code>library(CorShrink)
+library(CVXR)</code></pre>
+<pre><code>
+Attaching package: &#39;CVXR&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:stats&#39;:
+
+    power</code></pre>
+<div id="plin1-gene-data" class="section level2">
+<h2>PLIN1 gene data</h2>
+<pre class="r"><code>data(&quot;sample_by_feature_data&quot;)
+data(&quot;common_samples&quot;)</code></pre>
+<pre class="r"><code>tau_range = c(seq(0.1, 1, length.out = 10))
+measure = c()
+train_sample_id = sample(nrow(sample_by_feature_data), 300, replace = FALSE)
+predict_sample_id = setdiff(1:nrow(sample_by_feature_data), train_sample_id)
+
+################## Correlation matrix for training data   #########################
+
+train_datamat = sample_by_feature_data[train_sample_id,]
+empirical_cor = cor(train_datamat, method = &quot;pearson&quot;, use = &quot;pairwise.complete.obs&quot;)
+empirical_cor[is.na(empirical_cor)] = 0
+
+################# Correlation matrix for prediction data  #########################
+
+predict_datamat = sample_by_feature_data[predict_sample_id,]
+cormat2 = cor(predict_datamat, method = &quot;pearson&quot;, use = &quot;pairwise.complete.obs&quot;)
+cormat2[is.na(cormat2)] = 0</code></pre>
+</div>
+<div id="corshrink-sparse-and-corshrink-on-plin1" class="section level2">
+<h2>CorShrink-sparse and CorShrink on PLIN1</h2>
+<pre class="r"><code>out1 = CorShrinkData(train_datamat, sd_boot = FALSE, image = &quot;null&quot;,
+                               image.control = list(tl.cex = 0.2))
+estcor1 = out1$cor
+
+out2 = CorShrink2Data(train_datamat)
+
+estcor2 = out2</code></pre>
+<p>The Frobenius distance between the estimated correlation matrices from the training data and that estimated from the left out prediction data.</p>
+<pre class="r"><code>mean((estcor1 - cormat2)^2)  #######  CorShrink</code></pre>
+<pre><code>[1] 0.1271884</code></pre>
+<pre class="r"><code>mean((estcor2 - cormat2)^2)  #######  CorShrink2</code></pre>
+<pre><code>[1] 0.1367681</code></pre>
+</div>
+<div id="plin1-gene-correlation-visualization" class="section level2">
+<h2>PLIN1 gene correlation visualization</h2>
+<pre class="r"><code>data(&quot;sample_by_feature_data&quot;)
+data(&quot;common_samples&quot;)
+
+list_cors = list()
+temp = cor(sample_by_feature_data, use = &quot;pairwise.complete.obs&quot;)
+colnames(temp)=NULL
+rownames(temp) =NULL
+list_cors[[1]] = temp
+corshrink_out = CorShrinkData(sample_by_feature_data, sd_boot = FALSE, image = &quot;null&quot;,
+                                image.control = list(tl.cex = 0.2))
+temp2 = corshrink_out$cor
+colnames(temp2)=NULL
+rownames(temp2) =NULL
+list_cors[[2]] = temp2
+list_cors[[3]] = CorShrink2Data(sample_by_feature_data)
+list_cors[[4]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 1e-05)
+list_cors[[5]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 1e-02)
+list_cors[[6]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 1)
+list_cors[[7]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 10)
+list_cors[[8]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 100)
+
+par(mfrow = c(4, 2))
+for(m in 1:8){
+  col2 &lt;- c(&quot;blue&quot;, &quot;white&quot;, &quot;red&quot;)
+  corrplot(as.matrix(list_cors[[m]]), diag = FALSE, col = colorRampPalette(col2)(200), tl.pos = &quot;td&quot;,
+         tl.col = &quot;black&quot;, tl.cex = 0.8, rect.col = &quot;white&quot;,
+         na.label.col = &quot;white&quot;, method = &quot;color&quot;, type = &quot;upper&quot;)
+}</code></pre>
+<p><img src="figure/predictive_corshrink_sparse.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="multiple-genes-analysis" class="section level2">
+<h2>Multiple genes analysis</h2>
+<p>Choose a random set of 100 genes from GTEx.</p>
+<pre class="r"><code>person_tissue_genes = get(load(&quot;data/person_tissue_genes_voom.rda&quot;)) ##  544 x 53 x 16069 &#39;
+data(&quot;common_samples&quot;)
+sets_of_genes = sample(dim(person_tissue_genes)[3], 100, replace = FALSE) </code></pre>
+<p>Choose a training dataset randomly of 300 individuals and then use that to predict the correlation structure for the left-out individuals.</p>
+<pre class="r"><code>measure = c()
+for(numgene in 1:length(sets_of_genes)){
+  train_sample_id = sample(nrow(person_tissue_genes), 300, replace = FALSE)
+  predict_sample_id = setdiff(1:nrow(person_tissue_genes), train_sample_id)
+  train_datamat = person_tissue_genes[train_sample_id,,sets_of_genes[numgene]]
+  empirical_cor = cor(train_datamat, method = &quot;pearson&quot;, use = &quot;pairwise.complete.obs&quot;)
+  empirical_cor[is.na(empirical_cor)] = 0
+  
+  corshrink_out = CorShrinkData(train_datamat, sd_boot = FALSE, image = &quot;null&quot;,
+                                image.control = list(tl.cex = 0.2))
+  corshrink_cor = corshrink_out$cor
+  corshrink1_cor = CorShrink2Data(train_datamat)
+  corshrink2_cor = CorShrink2DataLoss(train_datamat, alpha = 1e-05)
+  corshrink3_cor = CorShrink2DataLoss(train_datamat, alpha = 1e-02)
+  corshrink4_cor = CorShrink2DataLoss(train_datamat, alpha = 1)
+  corshrink5_cor = CorShrink2DataLoss(train_datamat, alpha = 10)
+  
+
+  predict_datamat = person_tissue_genes[predict_sample_id,,sets_of_genes[numgene]]
+  cormat2 = cor(predict_datamat, method = &quot;pearson&quot;, use = &quot;pairwise.complete.obs&quot;)
+  cormat2[is.na(cormat2)] = 0
+  measure = rbind(measure, c(mean((cormat2 - empirical_cor)^2),
+                             mean((cormat2 - corshrink_cor)^2),
+                             mean((cormat2 - corshrink1_cor)^2),
+                             mean((cormat2 - corshrink2_cor)^2),
+                             mean((cormat2 - corshrink3_cor)^2),
+                             mean((cormat2 - corshrink4_cor)^2),
+                             mean((cormat2 - corshrink5_cor)^2)))
+  cat(&quot;We are at numgene&quot;, numgene)
+}</code></pre>
+<pre class="r"><code>measdure = get(load(&quot;output/PLIN1_predictive_perform_corshrink_sparse_loss.rda&quot;))</code></pre>
+<pre class="r"><code>df1 = data.frame(&quot;frobenius&quot; = c(measure[,1], measure[,2], measure[,3],
+                                 measure[,4], measure[,5], measure[,6],
+                                 measure[,7]),
+                 &quot;method&quot; = c(rep(&quot;empirical&quot;, dim(measure)[1]),
+                              rep(&quot;corshrink&quot;, dim(measure)[1]),
+                              rep(&quot;corshrink2-sparse&quot;, dim(measure)[1]),
+                              rep(&quot;corshrink2-loss-0.00001&quot;, dim(measure)[1]),
+                              rep(&quot;corshrink2-loss-0.01&quot;, dim(measure)[1]),
+                              rep(&quot;corshrink2-loss-1&quot;, dim(measure)[1]),
+                              rep(&quot;corshrink2-loss-10&quot;, dim(measure)[1]))
+)
+
+library(ggplot2)
+p &lt;- ggplot(df1, aes(method, frobenius, color = method)) + ylab(&quot;Frobenius Distance&quot;)
+p3 &lt;- p + geom_boxplot() + theme_bw() + theme(legend.position=&quot;none&quot;) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+p3</code></pre>
+<p><img src="figure/predictive_corshrink_sparse.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.1 (2018-07-02)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS High Sierra 10.13.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] ggplot2_3.1.0   CVXR_0.99-2     CorShrink_0.1-6 corrplot_0.84  
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_0.2.5  purrr_0.2.5       ashr_2.2-23      
+ [4] reshape2_1.4.3    lattice_0.20-35   colorspace_1.3-2 
+ [7] htmltools_0.3.6   yaml_2.2.0        gmp_0.5-13.2     
+[10] rlang_0.3.0.1     R.oo_1.22.0       pillar_1.3.0     
+[13] withr_2.1.2       glue_1.3.0        Rmpfr_0.7-1      
+[16] R.utils_2.7.0     bit64_0.9-7       bindrcpp_0.2.2   
+[19] scs_1.1-1         foreach_1.4.4     plyr_1.8.4       
+[22] bindr_0.1.1       stringr_1.3.1     munsell_0.5.0    
+[25] gtable_0.2.0      workflowr_1.1.1   R.methodsS3_1.7.1
+[28] codetools_0.2-15  evaluate_0.12     labeling_0.3     
+[31] knitr_1.20        pscl_1.5.2        doParallel_1.0.14
+[34] parallel_3.5.1    Rcpp_1.0.0        corpcor_1.6.9    
+[37] backports_1.1.2   scales_1.0.0      truncnorm_1.0-8  
+[40] bit_1.1-14        gridExtra_2.3     digest_0.6.18    
+[43] stringi_1.2.4     dplyr_0.7.8       grid_3.5.1       
+[46] rprojroot_1.3-2   ECOSolveR_0.4     tools_3.5.1      
+[49] magrittr_1.5      lazyeval_0.2.1    glmnet_2.0-16    
+[52] tibble_1.4.2      pkgconfig_2.0.2   crayon_1.3.4     
+[55] whisker_0.3-2     MASS_7.3-50       Matrix_1.2-14    
+[58] SQUAREM_2017.10-1 assertthat_0.2.0  rmarkdown_1.10   
+[61] iterators_1.0.10  R6_2.3.0          git2r_0.23.0     
+[64] compiler_3.5.1   </code></pre>
+</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
+  analysis was created with
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.1.1
+</p>
+<hr>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

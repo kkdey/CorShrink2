@@ -1,0 +1,57 @@
+---
+title: "Effects of missingnes on purely the variance structure"
+author: "Kushal K Dey, Rahul Mazumdar"
+date: "1/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(MASS) 
+library(Matrix)
+library(corpcor)
+```
+
+In this script, we look at how the variances of the variables may be affected owing to missing data entries in the data matrix.
+
+```{r}
+P <- 50
+block <- 5
+mat <- 0.3*diag(1,block) + 0.7*rep(1,block) %*% t(rep(1, block))
+Sigma <-   bdiag(mat, mat, mat, mat, mat, mat, mat, mat, mat, mat)
+corSigma <- cov2cor(Sigma)
+pcorSigma <- as.matrix(cor2pcor(corSigma))
+```
+
+##  Generating data and adding missing entries
+
+We incorporate 50 % missing entries
+
+```{r}
+data = mvrnorm(n=500, rep(0, P), Sigma)
+data_with_missing = apply(data, c(1, 2), function(x) {
+        if(runif(1,0,1) < 0.5){
+          y = NA
+        }else{
+          y = x
+        }
+        return(y)
+})
+```
+
+```{r}
+pairwise_cov = cov(data_with_missing, use = "pairwise.complete.obs")
+sigma_vals = sqrt(diag(pairwise_cov))
+sigma_vals
+```
+
+```{r}
+diag(Sigma)
+```
+
+So, the estimated variances or standard errors are pretty close to those of the original population variances, hence we can safely assume no effects of missingness on the variances. This mechanism assumes that for each variable, there are enough non zero entries to compute the variances accurately.
+
+

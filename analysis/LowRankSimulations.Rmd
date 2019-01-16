@@ -1,0 +1,137 @@
+---
+title: "Performance of CorShrink2 methods on Low Rank Simulations"
+author: "Kushal K Dey, Rahul Mazumdar"
+date: "1/16/2019"
+output: html_document
+---
+
+```{r}
+library(corrplot)
+library(CorShrink)
+library(corpcor)
+```
+
+We consider low rank data matrix simulations and then run `CorShrinkDataNuclear` on the data to see if it can recover the low rank structure and how well it does in comparison to other methods that produce sparse representation but not designed for low rank structure detection - such as `CorShrink-sparse ` and `CorShrinkLoss` methods.
+
+## N = 1000, P=100, K = 10
+
+```{r}
+library(denoiseR)
+dat = LRsim(1000, 100, 10, SNR = 10)
+
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(cor(dat$X)), diag = FALSE, col = colorRampPalette(col2)(200), tl.pos = "td",
+       tl.col = "black", tl.cex = 0.8, rect.col = "white",
+       na.label.col = "white", method = "color", type = "upper")
+```
+
+### Data with Missingness
+
+```{r}
+data_with_missing = apply(dat$X, c(1, 2), function(x) {
+        if(runif(1,0,1) < 0.5){
+          y = NA
+        }else{
+          y = x
+        }
+        return(y)
+})
+```
+
+### Empirical correlation matrix
+
+```{r}
+cormat = cor(data_with_missing, use = "pairwise.complete.obs")
+plot(svd(cormat)$d, pch = 20)
+```
+
+### CorShrinkDataNuclear
+
+```{r}
+out = CorShrinkDataNuclear(data_with_missing, method = "GD", stepsize = 1e-13, alpha = 10, max_iter = 100, tol = 1e-05)
+plot(svd(out$estS)$d, pch = 20)
+```
+
+### CorShrinkData-sparse
+
+```{r}
+out = CorShrink2Data(data_with_missing)
+plot(svd(out)$d, pch = 20)
+```
+
+## CorShrink2DataLoss
+
+```{r}
+out1 = CorShrink2DataLoss(data_with_missing = data_with_missing, alpha = 0.001)
+out2 = CorShrink2DataLoss(data_with_missing = data_with_missing, alpha = 0.1)
+out3 = CorShrink2DataLoss(data_with_missing = data_with_missing, alpha = 1)
+out4 = CorShrink2DataLoss(data_with_missing = data_with_missing, alpha = 10)
+
+par(mfrow = c(2,2))
+plot(svd(out1)$d, pch = 20)
+plot(svd(out2)$d, pch = 20)
+plot(svd(out3)$d, pch = 20)
+plot(svd(out4)$d, pch = 20)
+```
+
+## N = 50, P=100, K = 10
+
+```{r}
+library(denoiseR)
+dat = LRsim(50, 100, 10, SNR = 10)
+
+col2 <- c("blue", "white", "red")
+corrplot(as.matrix(cor(dat$X)), diag = FALSE, col = colorRampPalette(col2)(200), tl.pos = "td",
+       tl.col = "black", tl.cex = 0.8, rect.col = "white",
+       na.label.col = "white", method = "color", type = "upper")
+```
+
+### Data with Missingness
+
+```{r}
+data_with_missing = apply(dat$X, c(1, 2), function(x) {
+        if(runif(1,0,1) < 0.5){
+          y = NA
+        }else{
+          y = x
+        }
+        return(y)
+})
+```
+
+### Empirical correlation matrix
+
+```{r}
+cormat = cor(data_with_missing, use = "pairwise.complete.obs")
+plot(svd(cormat)$d, pch = 20)
+```
+
+### CorShrinkDataNuclear
+
+```{r}
+out = CorShrinkDataNuclear(data_with_missing, method = "GD", stepsize = 1e-13, alpha = 10, max_iter = 100, tol = 1e-05)
+plot(svd(out$estS)$d, pch = 20)
+```
+
+### CorShrinkData-sparse
+
+```{r}
+out = CorShrink2Data(data_with_missing)
+plot(svd(out)$d, pch = 20)
+```
+
+## CorShrink2DataLoss
+
+```{r}
+out1 = CorShrink2DataLoss(data_with_missing = data_with_missing, alpha = 0.001)
+out2 = CorShrink2DataLoss(data_with_missing = data_with_missing, alpha = 0.1)
+out3 = CorShrink2DataLoss(data_with_missing = data_with_missing, alpha = 1)
+out4 = CorShrink2DataLoss(data_with_missing = data_with_missing, alpha = 10)
+
+par(mfrow = c(2,2))
+plot(svd(out1)$d, pch = 20)
+plot(svd(out2)$d, pch = 20)
+plot(svd(out3)$d, pch = 20)
+plot(svd(out4)$d, pch = 20)
+```
+

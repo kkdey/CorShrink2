@@ -1,0 +1,171 @@
+---
+title: "Predictive Accuracy of CorShrink-sparse and CorShrink-Loss approaches on PLIN1 gene expression"
+author: "Kushal K Dey, Rahul Mazumdar"
+date: "1/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(corrplot)
+library(CorShrink)
+library(CVXR)
+```
+
+## PLIN1 gene data
+
+```{r}
+data("sample_by_feature_data")
+data("common_samples")
+```
+
+```{r}
+tau_range = c(seq(0.1, 1, length.out = 10))
+measure = c()
+train_sample_id = sample(nrow(sample_by_feature_data), 300, replace = FALSE)
+predict_sample_id = setdiff(1:nrow(sample_by_feature_data), train_sample_id)
+
+################## Correlation matrix for training data   #########################
+
+train_datamat = sample_by_feature_data[train_sample_id,]
+empirical_cor = cor(train_datamat, method = "pearson", use = "pairwise.complete.obs")
+empirical_cor[is.na(empirical_cor)] = 0
+
+################# Correlation matrix for prediction data  #########################
+
+predict_datamat = sample_by_feature_data[predict_sample_id,]
+cormat2 = cor(predict_datamat, method = "pearson", use = "pairwise.complete.obs")
+cormat2[is.na(cormat2)] = 0
+```
+
+## CorShrink-sparse and CorShrink on PLIN1
+
+```{r}
+out1 = CorShrinkData(train_datamat, sd_boot = FALSE, image = "null",
+                               image.control = list(tl.cex = 0.2))
+estcor1 = out1$cor
+
+out2 = CorShrink2Data(train_datamat)
+
+estcor2 = out2
+
+```
+
+The Frobenius distance between the estimated correlation matrices from the training data and that estimated from the left out prediction data.
+
+```{r}
+mean((estcor1 - cormat2)^2)  #######  CorShrink
+mean((estcor2 - cormat2)^2)  #######  CorShrink2
+
+```
+
+## PLIN1 gene correlation visualization
+
+```{r}
+data("sample_by_feature_data")
+data("common_samples")
+
+list_cors = list()
+temp = cor(sample_by_feature_data, use = "pairwise.complete.obs")
+colnames(temp)=NULL
+rownames(temp) =NULL
+list_cors[[1]] = temp
+corshrink_out = CorShrinkData(sample_by_feature_data, sd_boot = FALSE, image = "null",
+                                image.control = list(tl.cex = 0.2))
+temp2 = corshrink_out$cor
+colnames(temp2)=NULL
+rownames(temp2) =NULL
+list_cors[[2]] = temp2
+list_cors[[3]] = CorShrink2Data(sample_by_feature_data)
+list_cors[[4]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 1e-05)
+list_cors[[5]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 1e-02)
+list_cors[[6]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 1)
+list_cors[[7]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 10)
+list_cors[[8]] = CorShrink2DataLoss(sample_by_feature_data, alpha = 100)
+
+par(mfrow = c(4, 2))
+for(m in 1:8){
+  col2 <- c("blue", "white", "red")
+  corrplot(as.matrix(list_cors[[m]]), diag = FALSE, col = colorRampPalette(col2)(200), tl.pos = "td",
+         tl.col = "black", tl.cex = 0.8, rect.col = "white",
+         na.label.col = "white", method = "color", type = "upper")
+}
+
+```
+
+
+## Multiple genes analysis
+
+Choose a random set of 100 genes from GTEx.
+
+```{r}
+person_tissue_genes = get(load("data/person_tissue_genes_voom.rda")) ##  544 x 53 x 16069 '
+data("common_samples")
+sets_of_genes = sample(dim(person_tissue_genes)[3], 100, replace = FALSE) 
+
+```
+
+Choose a training dataset randomly of 300 individuals and then use that to predict the correlation structure for the left-out individuals.
+
+```{r echo=TRUE, eval=FALSE}
+measure = c()
+for(numgene in 1:length(sets_of_genes)){
+  train_sample_id = sample(nrow(person_tissue_genes), 300, replace = FALSE)
+  predict_sample_id = setdiff(1:nrow(person_tissue_genes), train_sample_id)
+  train_datamat = person_tissue_genes[train_sample_id,,sets_of_genes[numgene]]
+  empirical_cor = cor(train_datamat, method = "pearson", use = "pairwise.complete.obs")
+  empirical_cor[is.na(empirical_cor)] = 0
+  
+  corshrink_out = CorShrinkData(train_datamat, sd_boot = FALSE, image = "null",
+                                image.control = list(tl.cex = 0.2))
+  corshrink_cor = corshrink_out$cor
+  corshrink1_cor = CorShrink2Data(train_datamat)
+  corshrink2_cor = CorShrink2DataLoss(train_datamat, alpha = 1e-05)
+  corshrink3_cor = CorShrink2DataLoss(train_datamat, alpha = 1e-02)
+  corshrink4_cor = CorShrink2DataLoss(train_datamat, alpha = 1)
+  corshrink5_cor = CorShrink2DataLoss(train_datamat, alpha = 10)
+  
+
+  predict_datamat = person_tissue_genes[predict_sample_id,,sets_of_genes[numgene]]
+  cormat2 = cor(predict_datamat, method = "pearson", use = "pairwise.complete.obs")
+  cormat2[is.na(cormat2)] = 0
+  measure = rbind(measure, c(mean((cormat2 - empirical_cor)^2),
+                             mean((cormat2 - corshrink_cor)^2),
+                             mean((cormat2 - corshrink1_cor)^2),
+                             mean((cormat2 - corshrink2_cor)^2),
+                             mean((cormat2 - corshrink3_cor)^2),
+                             mean((cormat2 - corshrink4_cor)^2),
+                             mean((cormat2 - corshrink5_cor)^2)))
+  cat("We are at numgene", numgene)
+}
+
+```
+
+```{r}
+measdure = get(load("output/PLIN1_predictive_perform_corshrink_sparse_loss.rda"))
+```
+
+
+```{r}
+df1 = data.frame("frobenius" = c(measure[,1], measure[,2], measure[,3],
+                                 measure[,4], measure[,5], measure[,6],
+                                 measure[,7]),
+                 "method" = c(rep("empirical", dim(measure)[1]),
+                              rep("corshrink", dim(measure)[1]),
+                              rep("corshrink2-sparse", dim(measure)[1]),
+                              rep("corshrink2-loss-0.00001", dim(measure)[1]),
+                              rep("corshrink2-loss-0.01", dim(measure)[1]),
+                              rep("corshrink2-loss-1", dim(measure)[1]),
+                              rep("corshrink2-loss-10", dim(measure)[1]))
+)
+
+library(ggplot2)
+p <- ggplot(df1, aes(method, frobenius, color = method)) + ylab("Frobenius Distance")
+p3 <- p + geom_boxplot() + theme_bw() + theme(legend.position="none") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+p3
+
+```
+

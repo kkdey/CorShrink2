@@ -1,9 +1,32 @@
 ---
-title: "Home"
+title: "Correlation Matrix Estimation for Data with missing entries"
 site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
     toc: false
 ---
 
-Welcome to my research website.
+We propose a family of methods in lines of our previous algorithm , [CorShrink](https://github.com/kkdey/CorShrink) that perform sparse estimation of both correlation  and partial correlation matrices when the data matrix contains extensive missing data. In this workflow page, we deposit results of our simulation and real data applications carried using these CorShrink methods. Please install our R package **CorShrink** along with the dependencies mentioned in these scripts to reproduce the analyses.
+
+- [Predictive performance of CorShrink-sparse, CorShrinkLoss methods with CorShrink](predictive_corshrink_sparse.html)
+
+- [Predictive performance of CorShrink-slack methods in comparison to CorShrink and CorShrink-sparse](predictive_corshrink_sparse_slack.html)
+
+- [Comparing CorShrink-sparse, CorShrinkLoss and CorShrinkNuclear on Low Rank Simulations](LowRankSimulations.html)
+
+- [ICorShrink and ICorShrink-Adaptive on PLIN1 gene expression data](test_icorshrink_PLIN1.html)
+
+- [ICorShrink on Hub correlation matrices](icorshrink_test_hub.html)
+
+- [ICorShrink on toeplitz correlation matrices](icorshrink_test_toeplitz.html)
+
+- [ICorShrink on Banded precision matrices](icorshrink_test_banded_precision.html)
+
+- [ICorShrink-Adaptive on Hub correlation matrices](icorshrink2_test_hub.html)
+
+- [ICorShrink-Adaptive on toeplitz correlation matrices](icorshrink2_test_toeplitz.html)
+
+- [ICorShrink-Adaptive on banded precision matrices](icorshrink2_test_banded_precision.html)
+
+- [Effect of missingness of data on the variances](missingness_on_variance.html)
+
