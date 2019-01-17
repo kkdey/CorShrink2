@@ -48,7 +48,7 @@ plot(svd(cormat)$d, pch = 20)
 ### CorShrinkDataNuclear
 
 ```{r}
-out = CorShrinkDataNuclear(data_with_missing, method = "GD", stepsize = 1e-13, alpha = 10, max_iter = 100, tol = 1e-05)
+out = CorShrinkDataNuclear(data_with_missing, stepsize = 1e-05, alpha = 1, max_iter = 100, tol = 1e-05)
 plot(svd(out$estS)$d, pch = 20)
 ```
 
@@ -109,7 +109,7 @@ plot(svd(cormat)$d, pch = 20)
 ### CorShrinkDataNuclear
 
 ```{r}
-out = CorShrinkDataNuclear(data_with_missing, method = "GD", stepsize = 1e-13, alpha = 10, max_iter = 100, tol = 1e-05)
+out = CorShrinkDataNuclear(data_with_missing, stepsize = 1e-5, alpha = 1, max_iter = 100, tol = 1e-05)
 plot(svd(out$estS)$d, pch = 20)
 ```
 
