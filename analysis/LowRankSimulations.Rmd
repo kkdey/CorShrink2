@@ -41,14 +41,14 @@ data_with_missing = apply(dat$X, c(1, 2), function(x) {
 ### Empirical correlation matrix
 
 ```{r}
-cormat = cor(data_with_missing, use = "pairwise.complete.obs")
-plot(svd(cormat)$d, pch = 20)
+covmat = cov(data_with_missing, use = "pairwise.complete.obs")
+plot(eigen(covmat)$values, pch = 20)
 ```
 
 ### CorShrinkDataNuclear
 
 ```{r}
-out = CorShrinkDataNuclear(data_with_missing, stepsize = 1e-05, alpha = 1, max_iter = 100, tol = 1e-05)
+out = CorShrinkDataNuclear(data_with_missing, stepsize = 1, alpha = 1, max_iter = 100, tol = 1e-50)
 plot(svd(out$estS)$d, pch = 20)
 ```
 
@@ -109,7 +109,7 @@ plot(svd(cormat)$d, pch = 20)
 ### CorShrinkDataNuclear
 
 ```{r}
-out = CorShrinkDataNuclear(data_with_missing, stepsize = 1e-5, alpha = 1, max_iter = 100, tol = 1e-05)
+out = CorShrinkDataNuclear(data_with_missing, stepsize = 1, alpha = 0.01, max_iter = 100, tol = 1e-50)
 plot(svd(out$estS)$d, pch = 20)
 ```
 
