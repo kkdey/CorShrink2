@@ -1,0 +1,114 @@
+---
+title: "Gene Set Enrichment analysis of CorShrink pattern genes"
+author: "Kushal K Dey, Rahul Mazumder"
+date: "1/19/2019"
+output: html_document
+---
+
+We look at the gene set enrichment results of the top genes driving each of the patterns in the Corshrink correlation or partial correlation matrices - be it the genes with high correlations across all tissues, genes with high correlations in only the brain tissues and the genes with high correlations in only the non brain tissues. 
+
+```{r}
+library(mygene)
+```
+
+## Load Data
+
+```{r}
+################   Fitted correlation matrix from CorShrink-sparse  #########################
+corshrink_mat = get(load("data/CorShrink2Sparse_all_genes.rda"))
+
+###############  Log CPM normalized gene expression data   #############################
+person_tissue_genes = get(load("data/person_tissue_genes_voom.rda"))
+tissue_names = names(person_tissue_genes[1,,1])
+
+################   Gene names from the GTEx analysis  ############################
+gene_names_gtex = as.character(read.table("data/gene_names_GTEX_V6.txt")[,1])
+gene_names_gtex = as.character(sapply(gene_names_gtex, function(z) return(strsplit(z, "[.]")[[1]][1])))
+
+###############  Gene name with their locations on chromosomes  #############################
+
+list_genes_qc = read.table("data/list_genes_qc.txt", header = TRUE)
+ensg_names_list_genes = as.character(sapply(as.character(list_genes_qc$ENSG),
+                                        function(z) return(strsplit(z, "[.]")[[1]][1])))
+```
+
+## High all correlations (genes)
+
+```{r}
+tab <- array(0, dim(corshrink_mat)[3])
+for(m in 1:dim(corshrink_mat)[3]){
+  temp <- corshrink_mat[,, m]
+  tab[m] <-  (quantile(temp[row(temp) > col(temp)], 0.25))
+}
+imp_ids = order(tab, decreasing = TRUE)[1:200]
+imp_genes = gene_names_gtex[imp_ids]
+```
+
+```{r}
+out <- mygene::queryMany(imp_genes,  scopes="ensembl.gene", 
+                         fields=c("name", "summary", "symbol"), species="human");
+
+out$name[!is.na(out$name)]
+```
+
+## Low all correlations (genes)
+
+```{r}
+tab <- array(0, dim(corshrink_mat)[3])
+for(m in 1:dim(corshrink_mat)[3]){
+  temp <- corshrink_mat[,, m]
+  tab[m] <-  (quantile(temp[row(temp) > col(temp)], 0.25))
+}
+imp_ids = order(tab, decreasing = FALSE)[1:200]
+imp_genes = gene_names_gtex[imp_ids]
+```
+
+```{r}
+out <- mygene::queryMany(imp_genes,  scopes="ensembl.gene", 
+                         fields=c("name", "summary", "symbol"), species="human");
+
+out$name[!is.na(out$name)]
+```
+
+## Just non brain genes 
+
+```{r}
+tab <- array(0, dim(corshrink_mat)[3])
+for(m in 1:dim(corshrink_mat)[3]){
+  temp <- corshrink_mat[(8:20), (8:20), m]
+  temp1 <- corshrink_mat[-(8:20),-(8:20), m]
+  tab[m] <-  (quantile(temp[row(temp) > col(temp)], 0.25)) - (quantile(temp1[row(temp1) > col(temp1)], 0.75))
+}
+imp_ids = order(tab, decreasing = FALSE)[1:200]
+imp_genes = gene_names_gtex[imp_ids]
+```
+
+```{r}
+out <- mygene::queryMany(imp_genes,  scopes="ensembl.gene", 
+                         fields=c("name", "summary", "symbol"), species="human");
+
+out$name[!is.na(out$name)]
+```
+
+## Just brain correlations (genes)
+
+```{r}
+tab <- array(0, dim(corshrink_mat)[3])
+for(m in 1:dim(corshrink_mat)[3]){
+  temp <- corshrink_mat[(8:20), (8:20), m]
+  temp1 <- corshrink_mat[-(8:20),-(8:20), m]
+  tab[m] <-  (quantile(temp[row(temp) > col(temp)], 0.25)) - (quantile(temp1[row(temp1) > col(temp1)], 0.75))
+}
+imp_ids = order(tab, decreasing = TRUE)[1:200]
+imp_genes = gene_names_gtex[imp_ids]
+```
+
+```{r}
+out <- mygene::queryMany(imp_genes,  scopes="ensembl.gene", 
+                         fields=c("name", "summary", "symbol"), species="human");
+
+out$name[!is.na(out$name)]
+```
+
+
+

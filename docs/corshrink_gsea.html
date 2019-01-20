@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Kushal K Dey, Rahul Mazumder" />
+
+
+<title>Gene Set Enrichment analysis of CorShrink pattern genes</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">CorShrink2</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Gene Set Enrichment analysis of CorShrink pattern genes</h1>
+<h4 class="author"><em>Kushal K Dey, Rahul Mazumder</em></h4>
+<h4 class="date"><em>1/19/2019</em></h4>
+
+</div>
+
+
+<p><strong>Last updated:</strong> 2019-01-19</p>
+<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
+<ul>
+<li>
+<p><details> <summary> <strong style="color:red;">✖</strong> <strong>R Markdown file:</strong> uncommitted changes </summary> The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Environment:</strong> empty </summary></p>
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Seed:</strong> <code>set.seed(20190114)</code> </summary></p>
+<p>The command <code>set.seed(20190114)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Session information:</strong> recorded </summary></p>
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/kkdey/CorShrink2/tree/79c8c873f0bc9dda73888ba1724eebc91cec7950" target="_blank">79c8c87</a> </summary></p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    data/BEDFILES/
+    Ignored:    data/GO_annotations/
+    Ignored:    data/GSEA/
+    Ignored:    data/Pathways/
+
+Untracked files:
+    Untracked:  analysis/corshrink_gsea.Rmd
+    Untracked:  analysis/gene_lists_corshrink_sparse.Rmd
+    Untracked:  code/corshrink2_tissue_tissue.R
+    Untracked:  code/make_gene_lists.R
+    Untracked:  code/single_annot_column_to_annot_file.R
+    Untracked:  docs/figure/gene_lists_corshrink_sparse.Rmd/
+
+Unstaged changes:
+    Modified:   code/gene_names_to_ensembl.R
+
+</code></pre>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes. </details>
+</li>
+</ul>
+<hr />
+<p>We look at the gene set enrichment results of the top genes driving each of the patterns in the Corshrink correlation or partial correlation matrices - be it the genes with high correlations across all tissues, genes with high correlations in only the brain tissues and the genes with high correlations in only the non brain tissues.</p>
+<pre class="r"><code>library(mygene)</code></pre>
+<pre><code>Loading required package: GenomicFeatures</code></pre>
+<pre><code>Loading required package: BiocGenerics</code></pre>
+<pre><code>Loading required package: parallel</code></pre>
+<pre><code>
+Attaching package: &#39;BiocGenerics&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:parallel&#39;:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB</code></pre>
+<pre><code>The following objects are masked from &#39;package:stats&#39;:
+
+    IQR, mad, sd, var, xtabs</code></pre>
+<pre><code>The following objects are masked from &#39;package:base&#39;:
+
+    anyDuplicated, append, as.data.frame, basename, cbind,
+    colMeans, colnames, colSums, dirname, do.call, duplicated,
+    eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rowMeans, rownames, rowSums, sapply, setdiff, sort,
+    table, tapply, union, unique, unsplit, which, which.max,
+    which.min</code></pre>
+<pre><code>Loading required package: S4Vectors</code></pre>
+<pre><code>Loading required package: stats4</code></pre>
+<pre><code>
+Attaching package: &#39;S4Vectors&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:base&#39;:
+
+    expand.grid</code></pre>
+<pre><code>Loading required package: IRanges</code></pre>
+<pre><code>Loading required package: GenomeInfoDb</code></pre>
+<pre><code>Loading required package: GenomicRanges</code></pre>
+<pre><code>Loading required package: AnnotationDbi</code></pre>
+<pre><code>Loading required package: Biobase</code></pre>
+<pre><code>Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    &#39;browseVignettes()&#39;. To cite Bioconductor, see
+    &#39;citation(&quot;Biobase&quot;)&#39;, and for packages &#39;citation(&quot;pkgname&quot;)&#39;.</code></pre>
+<div id="load-data" class="section level2">
+<h2>Load Data</h2>
+<pre class="r"><code>################   Fitted correlation matrix from CorShrink-sparse  #########################
+corshrink_mat = get(load(&quot;data/CorShrink2Sparse_all_genes.rda&quot;))
+
+###############  Log CPM normalized gene expression data   #############################
+person_tissue_genes = get(load(&quot;data/person_tissue_genes_voom.rda&quot;))
+tissue_names = names(person_tissue_genes[1,,1])
+
+################   Gene names from the GTEx analysis  ############################
+gene_names_gtex = as.character(read.table(&quot;data/gene_names_GTEX_V6.txt&quot;)[,1])
+gene_names_gtex = as.character(sapply(gene_names_gtex, function(z) return(strsplit(z, &quot;[.]&quot;)[[1]][1])))
+
+###############  Gene name with their locations on chromosomes  #############################
+
+list_genes_qc = read.table(&quot;data/list_genes_qc.txt&quot;, header = TRUE)
+ensg_names_list_genes = as.character(sapply(as.character(list_genes_qc$ENSG),
+                                        function(z) return(strsplit(z, &quot;[.]&quot;)[[1]][1])))</code></pre>
+</div>
+<div id="high-all-correlations-genes" class="section level2">
+<h2>High all correlations (genes)</h2>
+<pre class="r"><code>tab &lt;- array(0, dim(corshrink_mat)[3])
+for(m in 1:dim(corshrink_mat)[3]){
+  temp &lt;- corshrink_mat[,, m]
+  tab[m] &lt;-  (quantile(temp[row(temp) &gt; col(temp)], 0.25))
+}
+imp_ids = order(tab, decreasing = TRUE)[1:200]
+imp_genes = gene_names_gtex[imp_ids]</code></pre>
+<pre class="r"><code>out &lt;- mygene::queryMany(imp_genes,  scopes=&quot;ensembl.gene&quot;, 
+                         fields=c(&quot;name&quot;, &quot;summary&quot;, &quot;symbol&quot;), species=&quot;human&quot;);</code></pre>
+<pre><code>Finished
+Pass returnall=TRUE to return lists of duplicate or missing query terms.</code></pre>
+<pre class="r"><code>out$name[!is.na(out$name)]</code></pre>
+<pre><code>  [1] &quot;glutathione S-transferase mu 1&quot;                                             
+  [2] &quot;phosphoserine phosphatase pseudogene 1&quot;                                     
+  [3] &quot;ribosomal protein L9&quot;                                                       
+  [4] &quot;ribosomal protein S28&quot;                                                      
+  [5] &quot;long intergenic non-protein coding RNA 1291&quot;                                
+  [6] &quot;ribosomal protein SA pseudogene 19&quot;                                         
+  [7] &quot;nuclear pore complex interacting protein family member B15&quot;                 
+  [8] &quot;major histocompatibility complex, class II, DR beta 5&quot;                      
+  [9] &quot;long intergenic non-protein coding RNA 431&quot;                                 
+ [10] &quot;survival of motor neuron 2, centromeric&quot;                                    
+ [11] &quot;leucine rich repeat containing 37 member A4, pseudogene&quot;                    
+ [12] &quot;ring finger protein 5 pseudogene 1&quot;                                         
+ [13] &quot;mitogen-activated protein kinase 8 interacting protein 1 pseudogene 1&quot;      
+ [14] &quot;POM121 transmembrane nucleoporin B (pseudogene)&quot;                            
+ [15] &quot;major histocompatibility complex, class II, DQ beta 1&quot;                      
+ [16] &quot;WAS protein family homolog 8, pseudogene&quot;                                   
+ [17] &quot;lactate dehydrogenase A pseudogene 4&quot;                                       
+ [18] &quot;KANSL1 antisense RNA 1&quot;                                                     
+ [19] &quot;threonine synthase like 2&quot;                                                  
+ [20] &quot;ArfGAP with GTPase domain, ankyrin repeat and PH domain 4&quot;                  
+ [21] &quot;family with sequence similarity 118 member A&quot;                               
+ [22] &quot;major histocompatibility complex, class I, U (pseudogene)&quot;                  
+ [23] &quot;Rh blood group D antigen&quot;                                                   
+ [24] &quot;cutA divalent cation tolerance homolog-like, pseudogene&quot;                    
+ [25] &quot;major histocompatibility complex, class I, C&quot;                               
+ [26] &quot;DEAD/H-box helicase 11&quot;                                                     
+ [27] &quot;family with sequence similarity 106 member A&quot;                               
+ [28] &quot;glutathione S-transferase theta 2 (gene/pseudogene)&quot;                        
+ [29] &quot;endoplasmic reticulum aminopeptidase 2&quot;                                     
+ [30] &quot;family with sequence similarity 106 member C, pseudogene&quot;                   
+ [31] &quot;MT-ND1 pseudogene 23&quot;                                                       
+ [32] &quot;nuclear pore complex interacting protein family member A7&quot;                  
+ [33] &quot;WASH complex subunit 1&quot;                                                     
+ [34] &quot;NUTM2A antisense RNA 1&quot;                                                     
+ [35] &quot;X-ray radiation resistance associated 1&quot;                                    
+ [36] &quot;FKBP prolyl isomerase 5&quot;                                                    
+ [37] &quot;polycystin 1, transient receptor potential channel interacting pseudogene 5&quot;
+ [38] &quot;OCLN pseudogene 1&quot;                                                          
+ [39] &quot;major histocompatibility complex, class I, K (pseudogene)&quot;                  
+ [40] &quot;zona pellucida glycoprotein 3&quot;                                              
+ [41] &quot;RNA polymerase II subunit J3&quot;                                               
+ [42] &quot;G protein pathway suppressor 2 pseudogene 1&quot;                                
+ [43] &quot;NUT family member 2A&quot;                                                       
+ [44] &quot;uncharacterized LOC400541&quot;                                                  
+ [45] &quot;mucin 20, cell surface associated pseudogene 1&quot;                             
+ [46] &quot;coiled-coil-helix-coiled-coil-helix domain containing 2 pseudogene 9&quot;       
+ [47] &quot;nuclear pore complex interacting protein family member A8&quot;                  
+ [48] &quot;POM121 and ZP3 fusion&quot;                                                      
+ [49] &quot;major histocompatibility complex, class II, DR beta 1&quot;                      
+ [50] &quot;churchill domain containing 1&quot;                                              
+ [51] &quot;general transcription factor IIH subunit 2&quot;                                 
+ [52] &quot;WASH complex subunit 2A&quot;                                                    
+ [53] &quot;ADP ribosylation factor like GTPase 17B&quot;                                    
+ [54] &quot;FLVCR1 divergent transcript&quot;                                                
+ [55] &quot;hect domain and RLD 2 pseudogene 3&quot;                                         
+ [56] &quot;KLHL7 divergent transcript&quot;                                                 
+ [57] &quot;LLPH divergent transcript&quot;                                                  
+ [58] &quot;nuclear pore complex interacting protein family, member A9&quot;                 
+ [59] &quot;DEAD/H-box helicase 11 like 2&quot;                                              
+ [60] &quot;pyruvate dehydrogenase phosphatase regulatory subunit&quot;                      
+ [61] &quot;MUC20 overlapping transcript&quot;                                               
+ [62] &quot;leucine rich repeat containing 37 member A2&quot;                                
+ [63] &quot;methyltransferase like 27&quot;                                                  
+ [64] &quot;glucuronidase, beta pseudogene 1&quot;                                           
+ [65] &quot;long intergenic non-protein coding RNA 1238&quot;                                
+ [66] &quot;spermatogenesis and centriole associated 1 like&quot;                            
+ [67] &quot;NUT family member 2D&quot;                                                       
+ [68] &quot;leucine rich repeat containing 37A&quot;                                         
+ [69] &quot;PRKX pseudogene 1&quot;                                                          
+ [70] &quot;ATE1 antisense RNA 1&quot;                                                       
+ [71] &quot;MIF antisense RNA 1&quot;                                                        
+ [72] &quot;succinate dehydrogenase complex flavoprotein subunit A pseudogene 2&quot;        
+ [73] &quot;TRIM52 antisense RNA 1 (head to head)&quot;                                      
+ [74] &quot;nuclear pore complex interacting protein family, member B2&quot;                 
+ [75] &quot;major histocompatibility complex, class I, H (pseudogene)&quot;                  
+ [76] &quot;zinc finger protein 266&quot;                                                    
+ [77] &quot;small nucleolar RNA host gene 5&quot;                                            
+ [78] &quot;serpin family B member 9 pseudogene 1&quot;                                      
+ [79] &quot;golgin A8 family member O&quot;                                                  
+ [80] &quot;MHC class I polypeptide-related sequence A&quot;                                 
+ [81] &quot;butyrophilin subfamily 3 member A2&quot;                                         
+ [82] &quot;cleavage and polyadenylation specific factor 1&quot;                             
+ [83] &quot;major histocompatibility complex, class I, G&quot;                               
+ [84] &quot;nuclear pore complex interacting protein family member A2&quot;                  
+ [85] &quot;ybeY metalloendoribonuclease&quot;                                               
+ [86] &quot;tropomyosin 3 pseudogene 9&quot;                                                 
+ [87] &quot;succinate dehydrogenase complex subunit D pseudogene 6&quot;                     
+ [88] &quot;RAS p21 protein activator 4CD, pseudogene&quot;                                  
+ [89] &quot;major histocompatibility complex, class I, J (pseudogene)&quot;                  
+ [90] &quot;FLYWCH-type zinc finger 1&quot;                                                  
+ [91] &quot;RANBP2-like and GRIP domain containing 2&quot;                                   
+ [92] &quot;ribosomal protein L23a pseudogene 87&quot;                                       
+ [93] &quot;NBPF member 3&quot;                                                              
+ [94] &quot;general transcription factor IIH subunit 2B (pseudogene)&quot;                   
+ [95] &quot;THAP7 antisense RNA 1&quot;                                                      
+ [96] &quot;glucuronidase, beta pseudogene 3&quot;                                           
+ [97] &quot;APAF1 interacting protein&quot;                                                  
+ [98] &quot;RNASEH1 antisense RNA 1&quot;                                                    
+ [99] &quot;coiled-coil-helix-coiled-coil-helix domain containing 2 pseudogene 2&quot;       
+[100] &quot;uncharacterized LOC100133091&quot;                                               
+[101] &quot;RANBP2-like and GRIP domain containing 8&quot;                                   
+[102] &quot;CCZ1 homolog, vacuolar protein trafficking and biogenesis associated&quot;       
+[103] &quot;elongator acetyltransferase complex subunit 5&quot;                              
+[104] &quot;peptidylprolyl isomerase like 3&quot;                                            
+[105] &quot;tropomyosin 3 pseudogene 6&quot;                                                 
+[106] &quot;hydroxysteroid 17-beta dehydrogenase 12&quot;                                    
+[107] &quot;DNL-type zinc finger&quot;                                                       
+[108] &quot;neighbor of BRCA1 lncRNA 2&quot;                                                 
+[109] &quot;autophagy related 10&quot;                                                       
+[110] &quot;aspartate rich 1&quot;                                                           
+[111] &quot;family with sequence similarity 86 member D, pseudogene&quot;                    
+[112] &quot;stromal antigen 3-like 1 (pseudogene)&quot;                                      
+[113] &quot;1-aminocyclopropane-1-carboxylate synthase homolog (inactive)&quot;              
+[114] &quot;peptidylprolyl isomerase E&quot;                                                 
+[115] &quot;COX20, cytochrome c oxidase assembly factor pseudogene 1&quot;                   
+[116] &quot;ribosomal RNA processing 7 homolog A&quot;                                       
+[117] &quot;fibroblast growth factor 7 pseudogene 3&quot;                                    
+[118] &quot;glutathione S-transferase mu 3&quot;                                             
+[119] &quot;mitochondrial ribosomal protein S18A pseudogene 1&quot;                          
+[120] &quot;MT-ND2 pseudogene 28&quot;                                                       
+[121] &quot;peroxisomal biogenesis factor 6&quot;                                            
+[122] &quot;uncharacterized LOC107985216&quot;                                               
+[123] &quot;ADP ribosylation factor like GTPase 17A&quot;                                    
+[124] &quot;BMS1, ribosome biogenesis factor pseudogene 10&quot;                             
+[125] &quot;guanylate binding protein 3&quot;                                                
+[126] &quot;pyruvate dehydrogenase kinase 4&quot;                                            
+[127] &quot;cyclin dependent kinase 11A&quot;                                                
+[128] &quot;chromosome 17 open reading frame 97&quot;                                        
+[129] &quot;phosphatidylinositol 4-kinase alpha pseudogene 2&quot;                           
+[130] &quot;DEAD-box helicase 43&quot;                                                       </code></pre>
+</div>
+<div id="low-all-correlations-genes" class="section level2">
+<h2>Low all correlations (genes)</h2>
+<pre class="r"><code>tab &lt;- array(0, dim(corshrink_mat)[3])
+for(m in 1:dim(corshrink_mat)[3]){
+  temp &lt;- corshrink_mat[,, m]
+  tab[m] &lt;-  (quantile(temp[row(temp) &gt; col(temp)], 0.25))
+}
+imp_ids = order(tab, decreasing = FALSE)[1:200]
+imp_genes = gene_names_gtex[imp_ids]</code></pre>
+<pre class="r"><code>out &lt;- mygene::queryMany(imp_genes,  scopes=&quot;ensembl.gene&quot;, 
+                         fields=c(&quot;name&quot;, &quot;summary&quot;, &quot;symbol&quot;), species=&quot;human&quot;);</code></pre>
+<pre><code>Finished
+Pass returnall=TRUE to return lists of duplicate or missing query terms.</code></pre>
+<pre class="r"><code>out$name[!is.na(out$name)]</code></pre>
+<pre><code>  [1] &quot;insulin like growth factor 1&quot;                                              
+  [2] &quot;carnitine palmitoyltransferase 1B&quot;                                         
+  [3] &quot;leucine rich repeat containing 37 member A15, pseudogene&quot;                  
+  [4] &quot;family with sequence similarity 129 member A&quot;                              
+  [5] &quot;Cdk5 and Abl enzyme substrate 1&quot;                                           
+  [6] &quot;long intergenic non-protein coding RNA 2256&quot;                               
+  [7] &quot;forkhead box C1&quot;                                                           
+  [8] &quot;discoidin domain receptor tyrosine kinase 1&quot;                               
+  [9] &quot;electron transfer flavoprotein regulatory factor 1&quot;                        
+ [10] &quot;glutamic--pyruvic transaminase 2&quot;                                          
+ [11] &quot;terminal nucleotidyltransferase 5C&quot;                                        
+ [12] &quot;RAS like family 12&quot;                                                        
+ [13] &quot;CUB and zona pellucida like domains 1&quot;                                     
+ [14] &quot;testis specific serine kinase 1A, pseudogene&quot;                              
+ [15] &quot;phytanoyl-CoA 2-hydroxylase interacting protein&quot;                           
+ [16] &quot;potassium two pore domain channel subfamily K member 1&quot;                    
+ [17] &quot;lysyl oxidase like 4&quot;                                                      
+ [18] &quot;histone cluster 1 H4 family member h&quot;                                      
+ [19] &quot;family with sequence similarity 87 member B&quot;                               
+ [20] &quot;tumor associated calcium signal transducer 2&quot;                              
+ [21] &quot;TBC1 domain family member 30&quot;                                              
+ [22] &quot;suppressor APC domain containing 2&quot;                                        
+ [23] &quot;shisa family member 3&quot;                                                     
+ [24] &quot;aspartate beta-hydroxylase domain containing 1&quot;                            
+ [25] &quot;chromosome 1 open reading frame 198&quot;                                       
+ [26] &quot;pleckstrin homology domain containing A7&quot;                                  
+ [27] &quot;CXADR like membrane protein&quot;                                               
+ [28] &quot;hemoglobin subunit gamma 1&quot;                                                
+ [29] &quot;microtubule associated protein 4&quot;                                          
+ [30] &quot;arginase 1&quot;                                                                
+ [31] &quot;fibronectin 1&quot;                                                             
+ [32] &quot;cingulin like 1&quot;                                                           
+ [33] &quot;profilin 1 pseudogene 6&quot;                                                   
+ [34] &quot;erb-b2 receptor tyrosine kinase 2&quot;                                         
+ [35] &quot;high mobility group box 1 pseudogene 31&quot;                                   
+ [36] &quot;amine oxidase, copper containing 3&quot;                                        
+ [37] &quot;isthmin 1&quot;                                                                 
+ [38] &quot;netrin 1&quot;                                                                  
+ [39] &quot;HOP homeobox&quot;                                                              
+ [40] &quot;adenosylmethionine decarboxylase 1 pseudogene 3&quot;                           
+ [41] &quot;golgin A8 family member M&quot;                                                 
+ [42] &quot;plakophilin 1&quot;                                                             
+ [43] &quot;SLC9A3 regulator 1&quot;                                                        
+ [44] &quot;actin binding LIM protein family member 2&quot;                                 
+ [45] &quot;kinesin family member 21B&quot;                                                 
+ [46] &quot;activated leukocyte cell adhesion molecule&quot;                                
+ [47] &quot;prolyl 3-hydroxylase 2&quot;                                                    
+ [48] &quot;erythrocyte membrane protein band 4.1 like 4B&quot;                             
+ [49] &quot;ATP synthase membrane subunit 6.8PL&quot;                                       
+ [50] &quot;small nucleolar RNA, H/ACA box 64&quot;                                         
+ [51] &quot;GRAM domain containing 4&quot;                                                  
+ [52] &quot;ribosomal protein L23a pseudogene 53&quot;                                      
+ [53] &quot;enolase 1 pseudogene 1&quot;                                                    
+ [54] &quot;zinc finger FYVE-type containing 27&quot;                                       
+ [55] &quot;glyceraldehyde 3 phosphate dehydrogenase pseudogene 62&quot;                    
+ [56] &quot;LHFPL tetraspan subfamily member 6&quot;                                        
+ [57] &quot;chromosome 2 open reading frame 88&quot;                                        
+ [58] &quot;cut like homeobox 1&quot;                                                       
+ [59] &quot;myelin regulatory factor&quot;                                                  
+ [60] &quot;RBAK-RBAKDN readthrough&quot;                                                   
+ [61] &quot;argonaute RISC catalytic component 2&quot;                                      
+ [62] &quot;gremlin 1, DAN family BMP antagonist&quot;                                      
+ [63] &quot;uncharacterized LOC102723335&quot;                                              
+ [64] &quot;synaptogyrin 3&quot;                                                            
+ [65] &quot;sideroflexin 5&quot;                                                            
+ [66] &quot;sarcolemma associated protein&quot;                                             
+ [67] &quot;phospholipase C delta 4&quot;                                                   
+ [68] &quot;hydroxysteroid 11-beta dehydrogenase 2&quot;                                    
+ [69] &quot;A-kinase anchoring protein 13&quot;                                             
+ [70] &quot;lysophospholipase I pseudogene 3&quot;                                          
+ [71] &quot;tachykinin precursor 1&quot;                                                    
+ [72] &quot;FBXW7 antisense RNA 1&quot;                                                     
+ [73] &quot;proteasome 26S subunit, ATPase 6&quot;                                          
+ [74] &quot;zinc finger protein 395&quot;                                                   
+ [75] &quot;LSM11, U7 small nuclear RNA associated&quot;                                    
+ [76] &quot;katanin catalytic subunit A1&quot;                                              
+ [77] &quot;notch receptor 2&quot;                                                          
+ [78] &quot;glutamate dehydrogenase 1 pseudogene 3&quot;                                    
+ [79] &quot;serine protease 23&quot;                                                        
+ [80] &quot;neogenin 1&quot;                                                                
+ [81] &quot;protocadherin 9&quot;                                                           
+ [82] &quot;claudin 1&quot;                                                                 
+ [83] &quot;PET100 homolog&quot;                                                            
+ [84] &quot;tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein eta&quot;
+ [85] &quot;integrin subunit alpha 6&quot;                                                  
+ [86] &quot;RFPL3 antisense&quot;                                                           
+ [87] &quot;repulsive guidance molecule BMP co-receptor a&quot;                             
+ [88] &quot;spermatogenesis associated 1&quot;                                              
+ [89] &quot;syndecan 3&quot;                                                                
+ [90] &quot;ribosomal protein L5&quot;                                                      
+ [91] &quot;ribosomal protein L21 pseudogene 120&quot;                                      
+ [92] &quot;engulfment and cell motility 1&quot;                                            
+ [93] &quot;sodium voltage-gated channel beta subunit 1&quot;                               
+ [94] &quot;regulator of G protein signaling 3&quot;                                        
+ [95] &quot;glucuronidase, beta pseudogene 9&quot;                                          
+ [96] &quot;hydroxysteroid 11-beta dehydrogenase 1&quot;                                    
+ [97] &quot;phospholipase A2 group IVA&quot;                                                
+ [98] &quot;uncharacterized LOC101927751&quot;                                              
+ [99] &quot;family with sequence similarity 72 member B&quot;                               
+[100] &quot;heat shock protein family B (small) member 8&quot;                              
+[101] &quot;protein kinase C zeta&quot;                                                     
+[102] &quot;telomerase associated protein 1&quot;                                           
+[103] &quot;cell death-inducing DFFA-like effector c pseudogene&quot;                       
+[104] &quot;zinc finger protein 234&quot;                                                   
+[105] &quot;RNA binding motif single stranded interacting protein 2 pseudogene 1&quot;      
+[106] &quot;armadillo repeat containing 9&quot;                                             
+[107] &quot;lin-7 homolog A, crumbs cell polarity complex component&quot;                   
+[108] &quot;four and a half LIM domains 2&quot;                                             
+[109] &quot;spectrin beta, non-erythrocytic 2&quot;                                         
+[110] &quot;beta-1,4-N-acetyl-galactosaminyltransferase 3&quot;                             
+[111] &quot;G protein subunit gamma 12&quot;                                                
+[112] &quot;mitogen-activated protein kinase kinase 2&quot;                                 
+[113] &quot;NCK1 divergent transcript&quot;                                                 
+[114] &quot;GOLGA2 pseudogene 10&quot;                                                      
+[115] &quot;B4GALT4 antisense RNA 1&quot;                                                   
+[116] &quot;catenin delta 1&quot;                                                           
+[117] &quot;penta-EF-hand domain containing 1&quot;                                         
+[118] &quot;CDC42 binding protein kinase beta&quot;                                         
+[119] &quot;jagged canonical Notch ligand 1&quot;                                           
+[120] &quot;myosin light chain kinase&quot;                                                 
+[121] &quot;WAP four-disulfide core domain 2&quot;                                          
+[122] &quot;caldesmon 1&quot;                                                               
+[123] &quot;latent transforming growth factor beta binding protein 1&quot;                  
+[124] &quot;syndecan 1&quot;                                                                
+[125] &quot;serine protease 8&quot;                                                         
+[126] &quot;neuralized E3 ubiquitin protein ligase 1&quot;                                  
+[127] &quot;discoidin domain receptor tyrosine kinase 2&quot;                               
+[128] &quot;protein phosphatase 3 catalytic subunit alpha&quot;                             
+[129] &quot;polyhomeotic homolog 1&quot;                                                    
+[130] &quot;protein phosphatase 1 regulatory inhibitor subunit 1B&quot;                     
+[131] &quot;uncharacterized LOC100132215&quot;                                              
+[132] &quot;telomeric repeat binding factor 1 pseudogene 5&quot;                            
+[133] &quot;adhesion G protein-coupled receptor A3&quot;                                    
+[134] &quot;Rho GTPase activating protein 31&quot;                                          
+[135] &quot;copine 5&quot;                                                                  
+[136] &quot;FERM, ARH/RhoGEF and pleckstrin domain protein 1&quot;                          
+[137] &quot;brain abundant membrane attached signal protein 1&quot;                         
+[138] &quot;transmembrane protein 35B&quot;                                                 
+[139] &quot;transmembrane protein 139&quot;                                                 
+[140] &quot;LHFPL tetraspan subfamily member 2&quot;                                        
+[141] &quot;copine 2&quot;                                                                  
+[142] &quot;G protein-coupled receptor kinase 6&quot;                                       
+[143] &quot;Wnt ligand secretion mediator&quot;                                             
+[144] &quot;ATP/GTP binding protein like 5&quot;                                            
+[145] &quot;brevican&quot;                                                                  
+[146] &quot;paired related homeobox 1&quot;                                                 
+[147] &quot;purinergic receptor P2Y1&quot;                                                  
+[148] &quot;synuclein alpha&quot;                                                           </code></pre>
+</div>
+<div id="just-non-brain-genes" class="section level2">
+<h2>Just non brain genes</h2>
+<pre class="r"><code>tab &lt;- array(0, dim(corshrink_mat)[3])
+for(m in 1:dim(corshrink_mat)[3]){
+  temp &lt;- corshrink_mat[(8:20), (8:20), m]
+  temp1 &lt;- corshrink_mat[-(8:20),-(8:20), m]
+  tab[m] &lt;-  (quantile(temp[row(temp) &gt; col(temp)], 0.25)) - (quantile(temp1[row(temp1) &gt; col(temp1)], 0.75))
+}
+imp_ids = order(tab, decreasing = FALSE)[1:200]
+imp_genes = gene_names_gtex[imp_ids]</code></pre>
+<pre class="r"><code>out &lt;- mygene::queryMany(imp_genes,  scopes=&quot;ensembl.gene&quot;, 
+                         fields=c(&quot;name&quot;, &quot;summary&quot;, &quot;symbol&quot;), species=&quot;human&quot;);</code></pre>
+<pre><code>Finished
+Pass returnall=TRUE to return lists of duplicate or missing query terms.</code></pre>
+<pre class="r"><code>out$name[!is.na(out$name)]</code></pre>
+<pre><code>  [1] &quot;MIF antisense RNA 1&quot;                                                            
+  [2] &quot;chromosome 17 open reading frame 97&quot;                                            
+  [3] &quot;MHC class I polypeptide-related sequence A&quot;                                     
+  [4] &quot;family with sequence similarity 106 member C, pseudogene&quot;                       
+  [5] &quot;spermatogenesis and centriole associated 1 like&quot;                                
+  [6] &quot;complement C1q like 3&quot;                                                          
+  [7] &quot;ubiquitin specific peptidase 6&quot;                                                 
+  [8] &quot;uncharacterized LOC105371430&quot;                                                   
+  [9] &quot;small nucleolar RNA host gene 5&quot;                                                
+ [10] &quot;G protein pathway suppressor 2 pseudogene 1&quot;                                    
+ [11] &quot;long intergenic non-protein coding RNA 960&quot;                                     
+ [12] &quot;solute carrier family 25 member 41&quot;                                             
+ [13] &quot;major histocompatibility complex, class I, H (pseudogene)&quot;                      
+ [14] &quot;nuclear pore complex interacting protein family, member A9&quot;                     
+ [15] &quot;aryl hydrocarbon receptor nuclear translocator like&quot;                            
+ [16] &quot;succinate dehydrogenase complex subunit D pseudogene 6&quot;                         
+ [17] &quot;paired box 8&quot;                                                                   
+ [18] &quot;integrator complex subunit 4 pseudogene 1&quot;                                      
+ [19] &quot;family with sequence similarity 106 member A&quot;                                   
+ [20] &quot;cytochrome P450 family 1 subfamily A member 1&quot;                                  
+ [21] &quot;elongator acetyltransferase complex subunit 5&quot;                                  
+ [22] &quot;major histocompatibility complex, class I, U (pseudogene)&quot;                      
+ [23] &quot;nudix hydrolase 2&quot;                                                              
+ [24] &quot;zinc finger protein 232&quot;                                                        
+ [25] &quot;cleavage and polyadenylation factor I subunit 1&quot;                                
+ [26] &quot;aspartate rich 1&quot;                                                               
+ [27] &quot;TIMP metallopeptidase inhibitor 4&quot;                                              
+ [28] &quot;RAD52 homolog, DNA repair protein&quot;                                              
+ [29] &quot;nuclear receptor subfamily 1 group D member 1&quot;                                  
+ [30] &quot;arachidonate 15-lipoxygenase, type B&quot;                                           
+ [31] &quot;churchill domain containing 1&quot;                                                  
+ [32] &quot;DEAD/H-box helicase 11 like 2&quot;                                                  
+ [33] &quot;long intergenic non-protein coding RNA 638&quot;                                     
+ [34] &quot;DEAD-box helicase 43&quot;                                                           
+ [35] &quot;tropomyosin 3 pseudogene 6&quot;                                                     
+ [36] &quot;nudix hydrolase 16&quot;                                                             
+ [37] &quot;glucosylceramidase beta pseudogene 1&quot;                                           
+ [38] &quot;cation channel sperm associated 2&quot;                                              
+ [39] &quot;NUTM2B antisense RNA 1&quot;                                                         
+ [40] &quot;heterochromatin protein 1 binding protein 3&quot;                                    
+ [41] &quot;HPS6, biogenesis of lysosomal organelles complex 2 subunit 3&quot;                   
+ [42] &quot;dihydropyrimidinase like 4&quot;                                                     
+ [43] &quot;cerebellin 3 precursor&quot;                                                         
+ [44] &quot;mitochondrial ribosomal protein S18A pseudogene 1&quot;                              
+ [45] &quot;golgin A8 family member O&quot;                                                      
+ [46] &quot;O-6-methylguanine-DNA methyltransferase&quot;                                        
+ [47] &quot;N-ribosyldihydronicotinamide:quinone reductase 2&quot;                               
+ [48] &quot;anti-Mullerian hormone&quot;                                                         
+ [49] &quot;zinc finger and AT-hook domain containing&quot;                                      
+ [50] &quot;Rh blood group D antigen&quot;                                                       
+ [51] &quot;ribosomal protein L36 pseudogene 4&quot;                                             
+ [52] &quot;long intergenic non-protein coding RNA 2210&quot;                                    
+ [53] &quot;phosphatidylinositol 4-kinase alpha pseudogene 2&quot;                               
+ [54] &quot;solute carrier family 35 member E2B&quot;                                            
+ [55] &quot;uncharacterized LOC100133091&quot;                                                   
+ [56] &quot;phospholipase A2 group IVC&quot;                                                     
+ [57] &quot;TBC1 domain containing kinase&quot;                                                  
+ [58] &quot;polycystin 1, transient receptor potential channel interacting pseudogene 5&quot;    
+ [59] &quot;aryl-hydrocarbon receptor repressor&quot;                                            
+ [60] &quot;DND microRNA-mediated repression inhibitor 1 pseudogene 1&quot;                      
+ [61] &quot;LanC like 2&quot;                                                                    
+ [62] &quot;XIAP associated factor 1&quot;                                                       
+ [63] &quot;ADP ribosylation factor like GTPase 17A&quot;                                        
+ [64] &quot;THO complex 3&quot;                                                                  
+ [65] &quot;uncharacterized LOC101929719&quot;                                                   
+ [66] &quot;uncharacterized LOC105369779&quot;                                                   
+ [67] &quot;nuclear receptor subfamily 1 group D member 2&quot;                                  
+ [68] &quot;zona pellucida glycoprotein 3&quot;                                                  
+ [69] &quot;glutamate-ammonia ligase&quot;                                                       
+ [70] &quot;spermatogenesis associated 20&quot;                                                  
+ [71] &quot;long intergenic non-protein coding RNA 115&quot;                                     
+ [72] &quot;copine 1&quot;                                                                       
+ [73] &quot;adenylate cyclase 10, soluble pseudogene 1&quot;                                     
+ [74] &quot;SMG8, nonsense mediated mRNA decay factor&quot;                                      
+ [75] &quot;long intergenic non-protein coding RNA 1252&quot;                                    
+ [76] &quot;glutamine rich 2&quot;                                                               
+ [77] &quot;methyltransferase like 7A&quot;                                                      
+ [78] &quot;EF-hand calcium binding domain 2&quot;                                               
+ [79] &quot;THAP7 antisense RNA 1&quot;                                                          
+ [80] &quot;coiled-coil domain containing 144B (pseudogene)&quot;                                
+ [81] &quot;NME/NM23 nucleoside diphosphate kinase 2&quot;                                       
+ [82] &quot;nuclear pore complex interacting protein family member A8&quot;                      
+ [83] &quot;solute carrier family 25 member 18&quot;                                             
+ [84] &quot;plasminogen-like B1&quot;                                                            
+ [85] &quot;MAM domain containing 4&quot;                                                        
+ [86] &quot;uncharacterized LOC100506606&quot;                                                   
+ [87] &quot;pleckstrin homology domain containing A8&quot;                                       
+ [88] &quot;period circadian regulator 3&quot;                                                   
+ [89] &quot;MX dynamin like GTPase 1&quot;                                                       
+ [90] &quot;zinc finger protein 692&quot;                                                        
+ [91] &quot;paired immunoglobin like type 2 receptor alpha&quot;                                 
+ [92] &quot;long intergenic non-protein coding RNA 886&quot;                                     
+ [93] &quot;mannosidase alpha class 2C member 1&quot;                                            
+ [94] &quot;molybdenum cofactor synthesis 3&quot;                                                
+ [95] &quot;peroxisomal biogenesis factor 6&quot;                                                
+ [96] &quot;POM121 transmembrane nucleoporin B (pseudogene)&quot;                                
+ [97] &quot;cathepsin W&quot;                                                                    
+ [98] &quot;Sad1 and UNC84 domain containing 2&quot;                                             
+ [99] &quot;pyruvate dehydrogenase phosphatase regulatory subunit&quot;                          
+[100] &quot;RAS p21 protein activator 4CD, pseudogene&quot;                                      
+[101] &quot;NODAL modulator 3&quot;                                                              
+[102] &quot;cysteine rich with EGF like domains 1&quot;                                          
+[103] &quot;dolichol kinase&quot;                                                                
+[104] &quot;polyhomeotic homolog 2&quot;                                                         
+[105] &quot;zinc finger protein 587&quot;                                                        
+[106] &quot;TMEM9B antisense RNA 1&quot;                                                         
+[107] &quot;D-box binding PAR bZIP transcription factor&quot;                                    
+[108] &quot;SAM and HD domain containing deoxynucleoside triphosphate triphosphohydrolase 1&quot;
+[109] &quot;charged multivesicular body protein 4B pseudogene 1&quot;                            
+[110] &quot;major histocompatibility complex, class I, G&quot;                                   
+[111] &quot;zinc finger protein 83&quot;                                                         
+[112] &quot;nicotinamide N-methyltransferase&quot;                                               
+[113] &quot;long intergenic non-protein coding RNA 1963&quot;                                    
+[114] &quot;tubulin tyrosine ligase like 3&quot;                                                 
+[115] &quot;Kruppel like factor 9&quot;                                                          
+[116] &quot;myosin light chain kinase family member 4&quot;                                      
+[117] &quot;RCC1 domain containing 1&quot;                                                       
+[118] &quot;eukaryotic translation initiation factor 3 subunit C&quot;                           
+[119] &quot;HemK methyltransferase family member 1&quot;                                         
+[120] &quot;mutS homolog 4&quot;                                                                 
+[121] &quot;cleavage and polyadenylation specific factor 1&quot;                                 
+[122] &quot;transmembrane protein 191C&quot;                                                     
+[123] &quot;CTR9 homolog, Paf1/RNA polymerase II complex component&quot;                         
+[124] &quot;PRKX pseudogene 1&quot;                                                              
+[125] &quot;cell division cycle 26&quot;                                                         
+[126] &quot;small nucleolar RNA, H/ACA box 31&quot;                                              
+[127] &quot;carnitine palmitoyltransferase 1A&quot;                                              
+[128] &quot;cornichon family AMPA receptor auxiliary protein 4&quot;                             
+[129] &quot;synaptonemal complex central element protein 1&quot;                                 
+[130] &quot;family with sequence similarity 107 member A&quot;                                   
+[131] &quot;polycystin 1, transient receptor potential channel interacting pseudogene 1&quot;    
+[132] &quot;PLA2G4C antisense RNA 1&quot;                                                        
+[133] &quot;dolichyl-phosphate N-acetylglucosaminephosphotransferase 1&quot;                     
+[134] &quot;COBW domain containing 5&quot;                                                       
+[135] &quot;succinate dehydrogenase complex flavoprotein subunit A pseudogene 2&quot;            
+[136] &quot;adenosine deaminase 2&quot;                                                          
+[137] &quot;MRE11 homolog, double strand break repair nuclease&quot;                             
+[138] &quot;family with sequence similarity 95 member B1&quot;                                   
+[139] &quot;STARD4 antisense RNA 1&quot;                                                         
+[140] &quot;RANBP2-like and GRIP domain containing 2&quot;                                       
+[141] &quot;fructosamine 3 kinase related protein&quot;                                          
+[142] &quot;neuronal regeneration related protein&quot;                                          
+[143] &quot;N-myristoyltransferase 1&quot;                                                       
+[144] &quot;glutathione S-transferase mu 2&quot;                                                 
+[145] &quot;Src like adaptor&quot;                                                               
+[146] &quot;ubiquilin 4&quot;                                                                    
+[147] &quot;ghrelin opposite strand/antisense RNA&quot;                                          
+[148] &quot;OMA1 zinc metallopeptidase&quot;                                                     
+[149] &quot;phosphatidylinositol glycan anchor biosynthesis class L&quot;                        
+[150] &quot;zinc finger protein 322 pseudogene 1&quot;                                           
+[151] &quot;RAS p21 protein activator 4B&quot;                                                   
+[152] &quot;ISG15 ubiquitin-like modifier&quot;                                                  
+[153] &quot;ribosomal RNA processing 7 homolog B, pseudogene&quot;                               
+[154] &quot;WASH complex subunit 1&quot;                                                         
+[155] &quot;MT-ND1 pseudogene 23&quot;                                                           
+[156] &quot;TAM41 mitochondrial translocator assembly and maintenance homolog&quot;              </code></pre>
+</div>
+<div id="just-brain-correlations-genes" class="section level2">
+<h2>Just brain correlations (genes)</h2>
+<pre class="r"><code>tab &lt;- array(0, dim(corshrink_mat)[3])
+for(m in 1:dim(corshrink_mat)[3]){
+  temp &lt;- corshrink_mat[(8:20), (8:20), m]
+  temp1 &lt;- corshrink_mat[-(8:20),-(8:20), m]
+  tab[m] &lt;-  (quantile(temp[row(temp) &gt; col(temp)], 0.25)) - (quantile(temp1[row(temp1) &gt; col(temp1)], 0.75))
+}
+imp_ids = order(tab, decreasing = TRUE)[1:200]
+imp_genes = gene_names_gtex[imp_ids]</code></pre>
+<pre class="r"><code>out &lt;- mygene::queryMany(imp_genes,  scopes=&quot;ensembl.gene&quot;, 
+                         fields=c(&quot;name&quot;, &quot;summary&quot;, &quot;symbol&quot;), species=&quot;human&quot;);</code></pre>
+<pre><code>Finished
+Pass returnall=TRUE to return lists of duplicate or missing query terms.</code></pre>
+<pre class="r"><code>out$name[!is.na(out$name)]</code></pre>
+<pre><code>  [1] &quot;suppressor of cytokine signaling 3&quot;                                      
+  [2] &quot;heat shock protein family B (small) member 1&quot;                            
+  [3] &quot;MAF bZIP transcription factor F&quot;                                         
+  [4] &quot;G protein-coupled receptor 4&quot;                                            
+  [5] &quot;colony stimulating factor 3&quot;                                             
+  [6] &quot;cyclin dependent kinase inhibitor 1A&quot;                                    
+  [7] &quot;MT-RNR2 like 2&quot;                                                          
+  [8] &quot;jumonji domain containing 6, arginine demethylase and lysine hydroxylase&quot;
+  [9] &quot;FOS like 1, AP-1 transcription factor subunit&quot;                           
+ [10] &quot;interleukin 18 receptor 1&quot;                                               
+ [11] &quot;solute carrier organic anion transporter family member 4A1&quot;              
+ [12] &quot;DnaJ heat shock protein family (Hsp40) member B1&quot;                        
+ [13] &quot;hepcidin antimicrobial peptide&quot;                                          
+ [14] &quot;AT-rich interaction domain 5A&quot;                                           
+ [15] &quot;growth arrest and DNA damage inducible beta&quot;                             
+ [16] &quot;acyl-CoA synthetase long chain family member 5&quot;                          
+ [17] &quot;mesencephalic astrocyte derived neurotrophic factor&quot;                     
+ [18] &quot;mixed lineage kinase domain like pseudokinase&quot;                           
+ [19] &quot;myelin protein zero like 2&quot;                                              
+ [20] &quot;SLCO4A1 antisense RNA 1&quot;                                                 
+ [21] &quot;apolipoprotein L domain containing 1&quot;                                    
+ [22] &quot;heat shock protein family A (Hsp70) member 6&quot;                            
+ [23] &quot;ceruloplasmin&quot;                                                           
+ [24] &quot;hypoxia inducible lipid droplet associated&quot;                              
+ [25] &quot;epithelial membrane protein 1&quot;                                           
+ [26] &quot;solute carrier family 16 member 1&quot;                                       
+ [27] &quot;Y-box binding protein 3&quot;                                                 
+ [28] &quot;TNF receptor superfamily member 10d&quot;                                     
+ [29] &quot;cyclin dependent kinase 2 associated protein 2&quot;                          
+ [30] &quot;metallothionein 1L, pseudogene&quot;                                          
+ [31] &quot;cold inducible RNA binding protein&quot;                                      
+ [32] &quot;S100 calcium binding protein A8&quot;                                         
+ [33] &quot;interferon induced transmembrane protein 3&quot;                              
+ [34] &quot;MPV17 mitochondrial inner membrane protein like&quot;                         
+ [35] &quot;interleukin 6&quot;                                                           
+ [36] &quot;endothelin 1&quot;                                                            
+ [37] &quot;BCL2 associated athanogene 3&quot;                                            
+ [38] &quot;transmembrane 4 L six family member 1&quot;                                   
+ [39] &quot;interleukin 1 receptor type 1&quot;                                           
+ [40] &quot;interleukin 15 receptor subunit alpha&quot;                                   
+ [41] &quot;ZFP36 ring finger protein&quot;                                               
+ [42] &quot;hyaluronidase 2&quot;                                                         
+ [43] &quot;C-X-C motif chemokine ligand 1&quot;                                          
+ [44] &quot;MT-CO2 pseudogene 12&quot;                                                    
+ [45] &quot;CCAAT enhancer binding protein delta&quot;                                    
+ [46] &quot;serpin family H member 1&quot;                                                
+ [47] &quot;plasminogen activator, urokinase receptor&quot;                               
+ [48] &quot;BCL3, transcription coactivator&quot;                                         
+ [49] &quot;guanylate binding protein 2&quot;                                             
+ [50] &quot;cysteine and serine rich nuclear protein 1&quot;                              
+ [51] &quot;high mobility group box 2&quot;                                               
+ [52] &quot;MAP kinase interacting serine/threonine kinase 2&quot;                        
+ [53] &quot;growth arrest and DNA damage inducible alpha&quot;                            
+ [54] &quot;TNF receptor superfamily member 1A&quot;                                      
+ [55] &quot;transporter 1, ATP binding cassette subfamily B member&quot;                  
+ [56] &quot;chitinase 3 like 1&quot;                                                      
+ [57] &quot;SERTA domain containing 1&quot;                                               
+ [58] &quot;interferon induced transmembrane protein 2&quot;                              
+ [59] &quot;stabilin 1&quot;                                                              
+ [60] &quot;cytidine deaminase&quot;                                                      
+ [61] &quot;chondroitin sulfate synthase 1&quot;                                          
+ [62] &quot;complement C1r&quot;                                                          
+ [63] &quot;cytidine monophospho-N-acetylneuraminic acid hydroxylase, pseudogene&quot;    
+ [64] &quot;cysteine rich secretory protein LCCL domain containing 2&quot;                
+ [65] &quot;SH3 domain and tetratricopeptide repeats 1&quot;                              
+ [66] &quot;toll like receptor 2&quot;                                                    
+ [67] &quot;Pim-1 proto-oncogene, serine/threonine kinase&quot;                           
+ [68] &quot;early growth response 1&quot;                                                 
+ [69] &quot;charged multivesicular body protein 6&quot;                                   
+ [70] &quot;DDB1 and CUL4 associated factor 16&quot;                                      
+ [71] &quot;KIAA0040&quot;                                                                
+ [72] &quot;C-C motif chemokine ligand 2&quot;                                            
+ [73] &quot;transglutaminase 2&quot;                                                      
+ [74] &quot;C-X-C motif chemokine ligand 12&quot;                                         
+ [75] &quot;interleukin 4 receptor&quot;                                                  
+ [76] &quot;LIF, interleukin 6 family cytokine&quot;                                      
+ [77] &quot;TNF superfamily member 10&quot;                                               
+ [78] &quot;ATP binding cassette subfamily A member 11, pseudogene&quot;                  
+ [79] &quot;salt inducible kinase 1&quot;                                                 
+ [80] &quot;nuclear factor, interleukin 3 regulated&quot;                                 
+ [81] &quot;regulator of chromosome condensation 1&quot;                                  
+ [82] &quot;caspase 4&quot;                                                               
+ [83] &quot;PDCD6IP pseudogene 2&quot;                                                    
+ [84] &quot;PDZ and LIM domain 1&quot;                                                    
+ [85] &quot;serpin family A member 1&quot;                                                
+ [86] &quot;semaphorin 3F&quot;                                                           
+ [87] &quot;PMS1 homolog 2, mismatch repair system component pseudogene 5&quot;           
+ [88] &quot;promyelocytic leukemia&quot;                                                  
+ [89] &quot;ADAMTS like 4&quot;                                                           
+ [90] &quot;heat shock protein family D (Hsp60) member 1&quot;                            
+ [91] &quot;calreticulin&quot;                                                            
+ [92] &quot;neural precursor cell expressed, developmentally down-regulated 9&quot;       
+ [93] &quot;nucleoporin 107&quot;                                                         
+ [94] &quot;angiopoietin like 4&quot;                                                     
+ [95] &quot;adrenomedullin&quot;                                                          
+ [96] &quot;interleukin 1 beta&quot;                                                      
+ [97] &quot;MCL1, BCL2 family apoptosis regulator&quot;                                   
+ [98] &quot;bromodomain containing 9&quot;                                                
+ [99] &quot;UBA like domain containing 2&quot;                                            
+[100] &quot;hes family bHLH transcription factor 1&quot;                                  
+[101] &quot;G0/G1 switch 2&quot;                                                          
+[102] &quot;ankyrin repeat domain 37&quot;                                                
+[103] &quot;RELA proto-oncogene, NF-kB subunit&quot;                                      
+[104] &quot;leucine rich repeat containing 37 member A17, pseudogene&quot;                
+[105] &quot;chromosome 7 open reading frame 61&quot;                                      
+[106] &quot;midnolin&quot;                                                                
+[107] &quot;phospholipid scramblase 1&quot;                                               
+[108] &quot;PDZ and LIM domain 4&quot;                                                    
+[109] &quot;serglycin&quot;                                                               
+[110] &quot;transmembrane BAX inhibitor motif containing 1&quot;                          
+[111] &quot;solute carrier family 16 member 3&quot;                                       
+[112] &quot;glucuronidase, beta pseudogene 1&quot;                                        
+[113] &quot;MT-RNR2 like 8&quot;                                                          
+[114] &quot;Fc fragment of IgG receptor IIa&quot;                                         
+[115] &quot;NFKB inhibitor alpha&quot;                                                    
+[116] &quot;endogenous retrovirus group K13 member 1&quot;                                
+[117] &quot;family with sequence similarity 204 member A&quot;                            
+[118] &quot;metallothionein 1A&quot;                                                      
+[119] &quot;BCL2 related protein A1&quot;                                                 
+[120] &quot;geminin, DNA replication inhibitor&quot;                                      
+[121] &quot;protein phosphatase 1 regulatory subunit 15A&quot;                            
+[122] &quot;thyroid hormone receptor interactor 10&quot;                                  
+[123] &quot;interferon stimulated exonuclease gene 20&quot;                               
+[124] &quot;interleukin 1 receptor associated kinase 3&quot;                              
+[125] &quot;RAB20, member RAS oncogene family&quot;                                       
+[126] &quot;S100 calcium binding protein A12&quot;                                        
+[127] &quot;tyrosylprotein sulfotransferase 1&quot;                                       
+[128] &quot;intercellular adhesion molecule 1&quot;                                       
+[129] &quot;tripartite motif containing 47&quot;                                          
+[130] &quot;solute carrier family 11 member 1&quot;                                       
+[131] &quot;protein phosphatase 1 regulatory subunit 18&quot;                             
+[132] &quot;myosin light chain 5&quot;                                                    
+[133] &quot;V-set immunoregulatory receptor&quot;                                         
+[134] &quot;NOP2/Sun RNA methyltransferase family member 2&quot;                          
+[135] &quot;zinc finger protein 596&quot;                                                 
+[136] &quot;interferon gamma inducible protein 16&quot;                                   
+[137] &quot;TNF receptor superfamily member 12A&quot;                                     
+[138] &quot;S100 calcium binding protein A9&quot;                                         
+[139] &quot;histone cluster 1 H1 family member c&quot;                                    
+[140] &quot;RNASEH1 antisense RNA 1&quot;                                                 
+[141] &quot;collectin subfamily member 11&quot;                                           
+[142] &quot;integrin subunit beta 4&quot;                                                 
+[143] &quot;abhydrolase domain containing 4&quot;                                         
+[144] &quot;long intergenic non-protein coding RNA 1184&quot;                             
+[145] &quot;TNFAIP3 interacting protein 2&quot;                                           
+[146] &quot;PX domain containing 1&quot;                                                  
+[147] &quot;cyclin dependent kinase 2&quot;                                               
+[148] &quot;zinc finger protein 226&quot;                                                 
+[149] &quot;TNF receptor superfamily member 1B&quot;                                      
+[150] &quot;Jun proto-oncogene, AP-1 transcription factor subunit&quot;                   
+[151] &quot;nicotinate phosphoribosyltransferase&quot;                                    
+[152] &quot;FOS like 2, AP-1 transcription factor subunit&quot;                           
+[153] &quot;syntaxin 11&quot;                                                             
+[154] &quot;helicase like transcription factor&quot;                                      
+[155] &quot;integrator complex subunit 14&quot;                                           
+[156] &quot;interleukin 6 receptor&quot;                                                  
+[157] &quot;inhibitor of DNA binding 1, HLH protein&quot;                                 
+[158] &quot;immediate early response 5 like&quot;                                         
+[159] &quot;tubulin beta 6 class V&quot;                                                  
+[160] &quot;purine nucleoside phosphorylase&quot;                                         
+[161] &quot;DnaJ heat shock protein family (Hsp40) member B4&quot;                        
+[162] &quot;sulfide quinone oxidoreductase&quot;                                          
+[163] &quot;Fc fragment of IgE receptor Ig&quot;                                          
+[164] &quot;glycogen phosphorylase L&quot;                                                
+[165] &quot;chloride intracellular channel 1&quot;                                        
+[166] &quot;ASB16 antisense RNA 1&quot;                                                   
+[167] &quot;speedy/RINGO cell cycle regulator family member E12, pseudogene&quot;         
+[168] &quot;C-type lectin domain family 2 member B&quot;                                  
+[169] &quot;complement C1q A chain&quot;                                                  
+[170] &quot;Fc fragment of IgG receptor IIIb&quot;                                        
+[171] &quot;tubulin alpha 1c&quot;                                                        
+[172] &quot;protein disulfide isomerase family A member 4&quot;                           
+[173] &quot;FES proto-oncogene, tyrosine kinase&quot;                                     
+[174] &quot;nuclear receptor subfamily 4 group A member 1&quot;                           
+[175] &quot;DDHD domain containing 2&quot;                                                
+[176] &quot;MYC proto-oncogene, bHLH transcription factor&quot;                           
+[177] &quot;activating transcription factor 4&quot;                                       
+[178] &quot;perilipin 2&quot;                                                             
+[179] &quot;carboxylesterase 2&quot;                                                      
+[180] &quot;MAX dimerization protein 1&quot;                                              
+[181] &quot;heat shock protein family A (Hsp70) member 5&quot;                            
+[182] &quot;interferon induced transmembrane protein 1&quot;                              
+[183] &quot;FRA10A associated CGG repeat 1&quot;                                          
+[184] &quot;sorting nexin 4&quot;                                                         
+[185] &quot;NADH:ubiquinone oxidoreductase complex assembly factor 3&quot;                
+[186] &quot;von Willebrand factor&quot;                                                   
+[187] &quot;heme oxygenase 1&quot;                                                        
+[188] &quot;protein phosphatase 1 regulatory subunit 3B&quot;                             
+[189] &quot;5-methyltetrahydrofolate-homocysteine methyltransferase&quot;                 
+[190] &quot;FAM20C, golgi associated secretory pathway kinase&quot;                       </code></pre>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.1 (2018-07-02)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS High Sierra 10.13.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats4    parallel  stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+[1] mygene_1.18.0          GenomicFeatures_1.34.1 AnnotationDbi_1.44.0  
+[4] Biobase_2.42.0         GenomicRanges_1.34.0   GenomeInfoDb_1.18.1   
+[7] IRanges_2.16.0         S4Vectors_0.20.1       BiocGenerics_0.28.0   
+
+loaded via a namespace (and not attached):
+ [1] bitops_1.0-6                matrixStats_0.54.0         
+ [3] bit64_0.9-7                 RColorBrewer_1.1-2         
+ [5] progress_1.2.0              httr_1.3.1                 
+ [7] rprojroot_1.3-2             tools_3.5.1                
+ [9] backports_1.1.2             R6_2.3.0                   
+[11] rpart_4.1-13                Hmisc_4.1-1                
+[13] DBI_1.0.0                   lazyeval_0.2.1             
+[15] colorspace_1.3-2            nnet_7.3-12                
+[17] tidyselect_0.2.5            gridExtra_2.3              
+[19] prettyunits_1.0.2           curl_3.2                   
+[21] chron_2.3-53                bit_1.1-14                 
+[23] compiler_3.5.1              git2r_0.23.0               
+[25] htmlTable_1.13.1            DelayedArray_0.8.0         
+[27] rtracklayer_1.42.1          scales_1.0.0               
+[29] checkmate_1.9.1             stringr_1.3.1              
+[31] digest_0.6.18               Rsamtools_1.34.0           
+[33] foreign_0.8-70              rmarkdown_1.10             
+[35] R.utils_2.7.0               XVector_0.22.0             
+[37] base64enc_0.1-3             pkgconfig_2.0.2            
+[39] htmltools_0.3.6             htmlwidgets_1.3            
+[41] rlang_0.3.0.1               rstudioapi_0.8             
+[43] RSQLite_2.1.1               bindr_0.1.1                
+[45] jsonlite_1.5                BiocParallel_1.16.5        
+[47] acepack_1.4.1               dplyr_0.7.8                
+[49] R.oo_1.22.0                 RCurl_1.95-4.11            
+[51] magrittr_1.5                GenomeInfoDbData_1.2.0     
+[53] Formula_1.2-3               Matrix_1.2-14              
+[55] Rcpp_1.0.0                  munsell_0.5.0              
+[57] proto_1.0.0                 R.methodsS3_1.7.1          
+[59] sqldf_0.4-11                stringi_1.2.4              
+[61] whisker_0.3-2               yaml_2.2.0                 
+[63] SummarizedExperiment_1.12.0 zlibbioc_1.28.0            
+[65] plyr_1.8.4                  grid_3.5.1                 
+[67] blob_1.1.1                  crayon_1.3.4               
+[69] lattice_0.20-35             Biostrings_2.50.1          
+[71] splines_3.5.1               hms_0.4.2                  
+[73] knitr_1.20                  pillar_1.3.0               
+[75] biomaRt_2.38.0              XML_3.98-1.16              
+[77] glue_1.3.0                  evaluate_0.12              
+[79] latticeExtra_0.6-28         data.table_1.11.8          
+[81] gtable_0.2.0                purrr_0.2.5                
+[83] assertthat_0.2.0            gsubfn_0.7                 
+[85] ggplot2_3.1.0               survival_2.42-3            
+[87] tibble_1.4.2                GenomicAlignments_1.18.1   
+[89] memoise_1.1.0               workflowr_1.1.1            
+[91] bindrcpp_0.2.2              cluster_2.0.7-1            </code></pre>
+</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
+  analysis was created with
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.1.1
+</p>
+<hr>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
