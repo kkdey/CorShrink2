@@ -3,6 +3,7 @@
 #########################  Run CorShrink2 on the tissue-tissue correlation matrix  ####################
 
 dat = get(load("../data/person_tissue_genes_voom.rda"))
+num_samples_per_tissue = apply(dat[,,1], 2, function(x) return(length(which(!is.na(x)))))
 gene_names_gtex = as.character(read.table("../data/gene_names_GTEX_V6.txt")[,1])
 gene_names_gtex = as.character(sapply(gene_names_gtex, function(z) return(strsplit(z, "[.]")[[1]][1])))
 # devtools::install_github("kkdey/CorShrink")

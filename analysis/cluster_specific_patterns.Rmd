@@ -1,0 +1,87 @@
+---
+title: "Cluster specific patterns"
+author: "Kushal K Dey, Rahul Mazumder"
+date: "1/19/2019"
+output: html_document
+---
+
+```{r}
+library(corrplot)
+```
+
+```{r}
+k=19
+genes <- as.character(read.table(paste0("data/gene_names_clus_", k, ".txt"))[1:6,1])
+
+gene_names_gtex = as.character(read.table("data/gene_names_GTEX_V6.txt")[,1])
+gene_names_gtex = as.character(sapply(gene_names_gtex, function(z) return(strsplit(z, "[.]")[[1]][1])))
+
+matched_ids = match(genes, gene_names_gtex)
+```
+
+## Load data
+
+```{r}
+corshrink_mat = get(load("data/CorShrink2Sparse_all_genes.rda"))
+```
+
+The top six driving genes in Blood
+
+```{r}
+genes
+```
+
+```{r}
+col2 <- c("blue", "white", "red")
+par(mfrow=c(3,2))
+for(m in 1:5){
+corrplot(as.matrix(corshrink_mat[,,matched_ids[m]]), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+
+}
+```
+
+## Significant circadian genes
+
+The circadian genes picked up 
+
+```{r}
+circadian_genes = c("ENSG00000126368", "ENSG00000133794", "ENSG00000105516", "ENSG00000110090")
+matched_ids = match(circadian_genes, gene_names_gtex)
+
+col2 <- c("blue", "white", "red")
+par(mfrow=c(2,2))
+for(m in 1:4){
+corrplot(as.matrix(corshrink_mat[,,matched_ids[m]]), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+
+}
+
+```
+
+## Other Circadian genes 
+
+```{r}
+circadian_genes_2 = c(" ENSG00000179094", "ENSG00000134852", "ENSG00000121671",
+                      "ENSG00000132326", "ENSG00000069667", "ENSG00000005812")
+matched_ids = match(circadian_genes_2, gene_names_gtex)
+matched_ids = matched_ids[!is.na(matched_ids)]
+
+col2 <- c("blue", "white", "red")
+par(mfrow=c(3,2))
+for(m in 1:5){
+corrplot(as.matrix(corshrink_mat[,,matched_ids[m]]), diag = FALSE,
+         col = colorRampPalette(col2)(200),
+         tl.pos = "td", tl.cex = 0.4, tl.col = "black",
+         rect.col = "white",na.label.col = "white",
+         method = "color", type = "upper")
+
+}
+```
+
